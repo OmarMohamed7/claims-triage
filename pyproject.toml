@@ -1,0 +1,28 @@
+[project]
+name = "claims-triage"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    # Core
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    # Orchestration
+    "langgraph>=1.2.7",
+    "langchain>=1.3.11",
+    # Policy Retrieval Agent (RAG)
+    "faiss-cpu>=1.14.3",
+    "rank-bm25>=0.2.2",
+    # Fraud Risk Agent (classical ML)
+    "scikit-learn>=1.9.0",
+    "xgboost>=3.3.0",
+    # "shap>=0.52",
+    "pandas>=3.0.3",
+    "numpy>=2.5.1",
+    "langchain-ollama>=1.1.0",
+]
+
+[dependency-groups]
+# Dev / test
+dev = ["pytest>=9.1.1"]
