@@ -40,15 +40,12 @@ class Thresholds:
 
 @dataclass
 class ModelConfig:
-    # Local by default: Ollama serves both chat and embeddings, so the whole
-    # pipeline runs with no API key and no per-call cost. Swap LLM_PROVIDER
-    # to point at a hosted model later without touching agent code.
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
     llm_model: str = os.getenv("LLM_MODEL", "llama3.2:3b")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    fraud_model_path: str = os.getenv("FRAUD_MODEL_PATH", "models/fraud_classifier.joblib")
-    # all-minilm is small enough to bundle in the deployed container; override
-    # to a larger Ollama embedding model (e.g. bge-m3) for local dev quality.
+    fraud_model_path: str = os.getenv(
+        "FRAUD_MODEL_PATH", "models/fraud_classifier.joblib"
+    )
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "all-minilm")
 
 
@@ -56,7 +53,8 @@ class ModelConfig:
 class PathConfig:
     data_dir: str = os.getenv("DATA_DIR", "data")
     policy_docs_dir: str = os.getenv("POLICY_DOCS_DIR", "data/policy_docs")
-    faiss_index_path: str = os.getenv("FAISS_INDEX_PATH", "data/faiss_index")
+    qdrant_path: str = os.getenv("QDRANT_PATH", "data/qdrant")
+    qdrant_collection_name: str = os.getenv("QDRANT_COLLECTION_NAME", "policy_clauses")
     raw_claims_dataset: str = os.getenv("RAW_CLAIMS_DATASET", "data/raw/claims.csv")
 
 

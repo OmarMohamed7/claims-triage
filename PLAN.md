@@ -19,9 +19,10 @@ depend on earlier ones.
 **File:** `scripts/build_policy_index.py`
 
 Chunk `data/policy_docs/*.md` by section, embed each chunk with the
-configured embedding model, build a FAISS index (dense) and a BM25 corpus
+configured embedding model, write the embeddings into a Qdrant collection
+(dense, embedded/on-disk mode — no separate server) and build a BM25 corpus
 (sparse), and persist both plus a chunk docstore to
-`settings.paths.faiss_index_path`.
+`settings.paths.qdrant_path`.
 
 **Done when:** running the script produces on-disk index artifacts that
 Phase 3 can load.
@@ -42,7 +43,7 @@ LLM call that turns `ClaimSubmission.raw_text` into a validated
 
 **File:** `src/agents/policy_retrieval.py`
 
-Hybrid FAISS + BM25 search over the Phase 1 index, synthesizing
+Hybrid Qdrant + BM25 search over the Phase 1 index, synthesizing
 `is_covered` / `deductible` / `coverage_limit` / `exclusions_matched` from
 the retrieved clauses.
 

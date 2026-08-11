@@ -11,4 +11,4 @@
 #   settings.thresholds.min_retrieval_confidence when no policy doc is a
 #   good match, and is_covered should end up None, not a guessed True/False.
 # - Build a small fixture index (few chunks) rather than depending on the
-#   full FAISS build_index() artifacts for unit tests.
+#   full Qdrant build_index() artifacts for unit tests.

@@ -1,18 +1,19 @@
-# Policy Retrieval Agent — hybrid (FAISS + BM25) search over data/policy_docs
+# Policy Retrieval Agent — hybrid (Qdrant + BM25) search over data/policy_docs
 # to determine coverage for an ExtractedClaim.
 #
 # Reads the index artifacts built by scripts/build_policy_index.py.
 # See PLAN.md, Phase 3.
 #
 # TODO: load_index()
-# - Load whatever artifacts scripts/build_policy_index.py wrote to
-#   settings.paths.faiss_index_path (FAISS index + BM25 object/pickle +
-#   chunk_id -> {text, document_id, section} docstore). Keep the on-disk
-#   format in sync with Phase 1.
+# - Open the Qdrant collection (settings.paths.qdrant_path,
+#   settings.paths.qdrant_collection_name) that
+#   scripts/build_policy_index.py wrote to, plus whatever BM25 object/pickle
+#   + chunk_id -> {text, document_id, section} docstore it persisted
+#   alongside it. Keep the on-disk format in sync with Phase 1.
 #
 # TODO: retrieve_policy(claim) -> PolicyRetrievalResult
 # - Embed a query built from claim.claim_type + incident_description.
-# - Run dense (FAISS) and sparse (BM25) search, combine rankings (e.g.
+# - Run dense (Qdrant) and sparse (BM25) search, combine rankings (e.g.
 #   reciprocal rank fusion), keep the top-k chunks as PolicyClause.
 # - Determine is_covered / deductible / coverage_limit by reading the top
 #   clauses (LLM synthesis, or rule-based section matching against

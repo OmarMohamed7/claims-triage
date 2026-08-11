@@ -24,7 +24,7 @@ routing each claim to an automated decision or a human reviewer.
 
 - **Intake Agent** — parses a raw claim submission (form text, email body, PDF
   dump) into a structured `ExtractedClaim`.
-- **Policy Retrieval Agent (RAG)** — retrieves relevant policy clauses (FAISS +
+- **Policy Retrieval Agent (RAG)** — retrieves relevant policy clauses (Qdrant +
   BM25 hybrid search) to determine coverage, deductible, and exclusions.
 - **Fraud Risk Agent** — a classical ML classifier (scikit-learn / XGBoost),
   not an LLM call, that scores fraud risk from claim and policy features.
@@ -44,7 +44,7 @@ object as the pipeline runs.
 - **Orchestration**: [LangGraph](https://github.com/langchain-ai/langgraph) /
   LangChain, [Anthropic](https://www.anthropic.com/) (Claude) as the LLM
   provider
-- **Policy retrieval**: FAISS, BM25 (`rank-bm25`), `sentence-transformers`
+- **Policy retrieval**: Qdrant (embedded/local mode), BM25 (`rank-bm25`), `sentence-transformers`
 - **Fraud risk**: scikit-learn, XGBoost, pandas, numpy
 - **Schemas / config**: Pydantic, `python-dotenv`
 - **Package management**: [uv](https://docs.astral.sh/uv/)
@@ -84,7 +84,7 @@ variables (see `.env.example`):
 | `LLM_PROVIDER` / `LLM_MODEL` | LLM used by Intake, Policy synthesis, and Adjudication agents |
 | `ANTHROPIC_API_KEY` | API key for the LLM provider |
 | `EMBEDDING_MODEL` | Embedding model for policy document retrieval |
-| `DATA_DIR`, `POLICY_DOCS_DIR`, `FAISS_INDEX_PATH`, `RAW_CLAIMS_DATASET` | Data paths |
+| `DATA_DIR`, `POLICY_DOCS_DIR`, `QDRANT_PATH`, `QDRANT_COLLECTION_NAME`, `RAW_CLAIMS_DATASET` | Data paths |
 | `FRAUD_MODEL_PATH` | Path to the trained fraud classifier |
 
 Decision boundaries (fraud auto-escalate threshold, high-value claim cutoff,

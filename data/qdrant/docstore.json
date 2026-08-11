@@ -1,0 +1,162 @@
+{
+  "POLICY-PROPERTY-FIRE-01::Coverage": {
+    "document_id": "POLICY-PROPERTY-FIRE-01",
+    "section": "Coverage",
+    "text": "Fire coverage pays for direct physical loss to the insured dwelling and\nattached structures caused by fire or smoke, including firefighting\nefforts (e.g. water damage from extinguishing the fire). Coverage extends\nto detached structures (garages, sheds) at 10% of the dwelling coverage\nlimit, and to personal property inside the dwelling at 50% of the dwelling\ncoverage limit.\n\nAdditional Living Expenses (ALE) are covered up to 20% of the dwelling\nlimit if the dwelling is rendered uninhabitable by a covered fire."
+  },
+  "POLICY-PROPERTY-FIRE-01::Exclusions": {
+    "document_id": "POLICY-PROPERTY-FIRE-01",
+    "section": "Exclusions",
+    "text": "Fire coverage does NOT apply to:\n- Fire caused intentionally by the policyholder or at the policyholder's\n  direction.\n- Loss where the dwelling had been vacant for more than 60 consecutive\n  days prior to the fire, unless a vacancy permit was on file.\n- Damage from a fire that started on a neighboring property and is\n  primarily the neighboring property owner's liability (subrogation\n  applies).\n- Loss to property specifically excluded under a scheduled personal\n  property endorsement (fine art, jewelry above stated limits)."
+  },
+  "POLICY-PROPERTY-FIRE-01::Deductible & Limits": {
+    "document_id": "POLICY-PROPERTY-FIRE-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: 1% of dwelling coverage limit or $1,000, whichever\n  is greater.\n- Dwelling coverage limit: as stated on the policy declarations page, up to\n  $500,000 under this policy tier."
+  },
+  "POLICY-PROPERTY-FIRE-01::Claim Filing Requirements": {
+    "document_id": "POLICY-PROPERTY-FIRE-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims must be reported within 5 days of the fire. A fire department\nincident report is required for any claim exceeding $5,000. Claims lacking\na fire department report and exceeding this threshold are routed to\nmanual review before payout."
+  },
+  "POLICY-AUTO-COLLISION-01::Coverage": {
+    "document_id": "POLICY-AUTO-COLLISION-01",
+    "section": "Coverage",
+    "text": "Collision coverage pays for damage to the policyholder's own vehicle\nresulting from a collision with another vehicle or object, or from the\nvehicle overturning, regardless of fault. This includes single-vehicle\naccidents (e.g. striking a guardrail, pothole, or parked car).\n\nCovered losses are paid up to the vehicle's actual cash value (ACV) at the\ntime of loss, less the applicable deductible."
+  },
+  "POLICY-AUTO-COLLISION-01::Exclusions": {
+    "document_id": "POLICY-AUTO-COLLISION-01",
+    "section": "Exclusions",
+    "text": "Collision coverage does NOT apply to:\n- Damage from normal wear and tear, mechanical breakdown, or road debris\n  that does not involve a collision (see Comprehensive Coverage).\n- Damage sustained while the vehicle was being used for commercial\n  ride-sharing or delivery purposes, unless a commercial-use rider is on\n  file.\n- Damage sustained while the vehicle was being operated by a driver not\n  listed on the policy, unless that driver had reasonable belief they were\n  entitled to operate the vehicle.\n- Racing, speed contests, or off-road use.\n- Intentional damage caused by the policyholder."
+  },
+  "POLICY-AUTO-COLLISION-01::Deductible & Limits": {
+    "document_id": "POLICY-AUTO-COLLISION-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: $500 per incident (policyholder may elect $250 or\n  $1,000 at binding).\n- Coverage limit: actual cash value of the vehicle at time of loss, up to\n  $75,000."
+  },
+  "POLICY-AUTO-COLLISION-01::Claim Filing Requirements": {
+    "document_id": "POLICY-AUTO-COLLISION-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims must be reported within 30 days of the incident date. A police\nreport is required for any collision involving another vehicle, a\npedestrian, or damage exceeding $2,000. Claims reported more than 60 days\nafter the incident date are subject to additional review before payout."
+  },
+  "POLICY-PROPERTY-WATER-01::Coverage": {
+    "document_id": "POLICY-PROPERTY-WATER-01",
+    "section": "Coverage",
+    "text": "Water damage coverage pays for sudden and accidental water discharge from\nplumbing, heating, air conditioning, or household appliances (e.g. a burst\npipe or failed water heater), including the cost of tearing out and\nreplacing the portion of the dwelling necessary to access and repair the\nsource. Coverage extends to resulting damage to personal property at 50%\nof the dwelling coverage limit."
+  },
+  "POLICY-PROPERTY-WATER-01::Exclusions": {
+    "document_id": "POLICY-PROPERTY-WATER-01",
+    "section": "Exclusions",
+    "text": "Water damage coverage does NOT apply to:\n- Flood, meaning surface water, overflow of a body of water, or\n  storm-driven surge (this requires separate flood insurance, typically\n  through NFIP).\n- Gradual leakage occurring over a period of more than 14 days, or damage\n  the policyholder knew about and failed to remediate.\n- Sewer or drain backup, unless the Sewer Backup Endorsement is on file.\n- Water damage resulting from the policyholder's failure to maintain\n  reasonable heat in the dwelling during freezing conditions, if the\n  dwelling was left unoccupied.\n- Mold remediation beyond $5,000, unless directly and immediately resulting\n  from an otherwise-covered water discharge."
+  },
+  "POLICY-PROPERTY-WATER-01::Deductible & Limits": {
+    "document_id": "POLICY-PROPERTY-WATER-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: $1,000 per incident.\n- Dwelling coverage limit: as stated on the policy declarations page, up to\n  $500,000 under this policy tier."
+  },
+  "POLICY-PROPERTY-WATER-01::Claim Filing Requirements": {
+    "document_id": "POLICY-PROPERTY-WATER-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims must be reported within 5 days of discovering the damage. The\npolicyholder must take reasonable steps to prevent further damage (e.g.\nshutting off the water supply) once the source is discovered; failure to\ndo so may reduce the payable amount. Photos of the source of the leak are\nrequired."
+  },
+  "POLICY-PROPERTY-THEFT-01::Coverage": {
+    "document_id": "POLICY-PROPERTY-THEFT-01",
+    "section": "Coverage",
+    "text": "Theft coverage pays for personal property stolen from the insured dwelling\nor, at reduced limits, from a vehicle or while traveling (\"off-premises\"\ntheft, covered at 10% of the personal property limit). Coverage includes\ndamage to the dwelling caused by forced entry during a burglary (broken\ndoor, window)."
+  },
+  "POLICY-PROPERTY-THEFT-01::Exclusions": {
+    "document_id": "POLICY-PROPERTY-THEFT-01",
+    "section": "Exclusions",
+    "text": "Theft coverage does NOT apply to:\n- Theft by a resident of the household or a person regularly employed on\n  the premises (e.g. a live-in caretaker), except as provided by law.\n- Loss of cash, unless specifically scheduled, beyond $200.\n- Jewelry, watches, and furs beyond $1,500 combined, unless separately\n  scheduled on a Valuable Items Endorsement.\n- Theft from a dwelling under construction or vacant for more than 60\n  consecutive days.\n- Business property beyond $2,500, unless a home-business endorsement is on\n  file."
+  },
+  "POLICY-PROPERTY-THEFT-01::Deductible & Limits": {
+    "document_id": "POLICY-PROPERTY-THEFT-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: $500 per incident.\n- Personal property coverage limit: 50% of dwelling coverage limit, up to\n  $250,000."
+  },
+  "POLICY-PROPERTY-THEFT-01::Claim Filing Requirements": {
+    "document_id": "POLICY-PROPERTY-THEFT-01",
+    "section": "Claim Filing Requirements",
+    "text": "A police report is REQUIRED for all theft claims and must be filed within\n48 hours of discovery. An itemized list of stolen property with\napproximate purchase dates and values must be submitted; claims lacking\nthis itemization are routed to manual review."
+  },
+  "POLICY-AUTO-THEFT-01::Coverage": {
+    "document_id": "POLICY-AUTO-THEFT-01",
+    "section": "Coverage",
+    "text": "Theft coverage (part of Comprehensive Coverage) pays for the loss of the\npolicyholder's vehicle due to theft, and for damage caused by attempted\ntheft (e.g. broken window, forced ignition damage, stripped catalytic\nconverter). Personal belongings left inside the vehicle are NOT covered\nunder this policy \u2014 see the policyholder's homeowners/renters policy for\npersonal property coverage.\n\nIf the vehicle is recovered within 30 days of the theft report, the claim\nconverts to a damage claim for repairs rather than a total-loss payout."
+  },
+  "POLICY-AUTO-THEFT-01::Exclusions": {
+    "document_id": "POLICY-AUTO-THEFT-01",
+    "section": "Exclusions",
+    "text": "Theft coverage does NOT apply to:\n- Theft by a resident of the policyholder's household or a person listed\n  as an authorized driver on the policy.\n- Loss where the keys were left in the ignition or the vehicle was left\n  running and unattended in a non-secured location.\n- Theft occurring more than 30 days after the policy lapsed for\n  non-payment.\n- Mysterious disappearance without evidence of forced entry or a police\n  report."
+  },
+  "POLICY-AUTO-THEFT-01::Deductible & Limits": {
+    "document_id": "POLICY-AUTO-THEFT-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: $500 per incident.\n- Coverage limit: actual cash value of the vehicle at time of loss, up to\n  $75,000. Aftermarket equipment (stereo systems, custom rims) is covered\n  only up to $1,000 combined unless separately scheduled."
+  },
+  "POLICY-AUTO-THEFT-01::Claim Filing Requirements": {
+    "document_id": "POLICY-AUTO-THEFT-01",
+    "section": "Claim Filing Requirements",
+    "text": "A police report is REQUIRED for all theft claims and must be filed within\n48 hours of discovery. Claims without an accompanying police report number\nwill not be processed and are routed to manual review. The claimed vehicle\nvalue must be supported by registration and, where available, maintenance\nrecords."
+  },
+  "POLICY-AUTO-COMPREHENSIVE-01::Coverage": {
+    "document_id": "POLICY-AUTO-COMPREHENSIVE-01",
+    "section": "Coverage",
+    "text": "Comprehensive coverage pays for damage to the policyholder's vehicle from\ncauses other than collision, including: fire, falling objects, hail,\nflooding, windstorm, vandalism, and contact with an animal (e.g. hitting a\ndeer). It also covers glass damage (windshield chips/cracks) and, as\ndescribed in the Auto Theft Coverage document, theft and attempted theft."
+  },
+  "POLICY-AUTO-COMPREHENSIVE-01::Exclusions": {
+    "document_id": "POLICY-AUTO-COMPREHENSIVE-01",
+    "section": "Exclusions",
+    "text": "Comprehensive coverage does NOT apply to:\n- Mechanical or electrical breakdown unrelated to a covered peril.\n- Damage from freezing, unless caused by a covered weather event.\n- Wear, tear, and gradual deterioration (tire wear, rust, corrosion).\n- Loss occurring while the vehicle is used for commercial purposes without\n  a commercial-use rider.\n- Confiscation or destruction by government or civil authority."
+  },
+  "POLICY-AUTO-COMPREHENSIVE-01::Deductible & Limits": {
+    "document_id": "POLICY-AUTO-COMPREHENSIVE-01",
+    "section": "Deductible & Limits",
+    "text": "- Standard deductible: $250 per incident (glass-only claims may qualify for\n  a $0 deductible under the Glass Endorsement, if elected).\n- Coverage limit: actual cash value of the vehicle at time of loss, up to\n  $75,000."
+  },
+  "POLICY-AUTO-COMPREHENSIVE-01::Claim Filing Requirements": {
+    "document_id": "POLICY-AUTO-COMPREHENSIVE-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims must be reported within 30 days of discovering the damage. Weather\n-related claims (hail, flooding, windstorm) should reference the\ncorresponding date and location of the weather event where possible, as\nthis may be cross-checked against public weather records during review."
+  },
+  "POLICY-OTHER-01::Coverage": {
+    "document_id": "POLICY-OTHER-01",
+    "section": "Coverage",
+    "text": "This document covers claim types that do not fall cleanly under Auto\nCollision, Auto Theft, Auto Comprehensive, Property Fire, Property Water,\nProperty Theft, or Liability coverage \u2014 for example, claims involving\nmultiple coverage types, claims describing an ambiguous or unusual loss,\nor claims where the loss type stated by the claimant does not match the\npolicy's defined coverage categories.\n\nSuch claims are not automatically denied. They should be evaluated against\nthe closest matching coverage type(s) above, and where coverage is\ngenuinely unclear, routed to a human reviewer rather than auto-adjudicated."
+  },
+  "POLICY-OTHER-01::Exclusions": {
+    "document_id": "POLICY-OTHER-01",
+    "section": "Exclusions",
+    "text": "- Losses with no identifiable covered peril (e.g. general deterioration,\n  unexplained loss with no supporting detail).\n- Claims for coverage types not written under this policy at all (e.g. a\n  flood claim when only fire/water-discharge coverage, not NFIP flood\n  insurance, is in force)."
+  },
+  "POLICY-OTHER-01::Deductible & Limits": {
+    "document_id": "POLICY-OTHER-01",
+    "section": "Deductible & Limits",
+    "text": "Not applicable at the document level \u2014 refer to the deductible and limit of\nwhichever specific coverage type the claim is ultimately matched to."
+  },
+  "POLICY-OTHER-01::Claim Filing Requirements": {
+    "document_id": "POLICY-OTHER-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims that cannot be confidently matched to a single coverage type within\nthis document set should be flagged with `is_covered = None` (inconclusive)\nby the Policy Retrieval Agent rather than guessed, and escalated for human\nreview under the \"ambiguous policy coverage\" reason."
+  },
+  "POLICY-LIABILITY-01::Coverage": {
+    "document_id": "POLICY-LIABILITY-01",
+    "section": "Coverage",
+    "text": "Liability coverage pays on behalf of the policyholder for bodily injury or\nproperty damage to third parties for which the policyholder is legally\nresponsible, arising out of an auto accident or a covered premises\nincident. This includes the cost of the third party's medical expenses,\nproperty repair, and, where applicable, the policyholder's legal defense\ncosts, up to the policy limit."
+  },
+  "POLICY-LIABILITY-01::Exclusions": {
+    "document_id": "POLICY-LIABILITY-01",
+    "section": "Exclusions",
+    "text": "Liability coverage does NOT apply to:\n- Injury or damage the policyholder intended to cause.\n- Liability arising from the policyholder's business or professional\n  activities, unless a business liability rider is on file.\n- Contractual liability assumed by the policyholder beyond what would exist\n  at law in the absence of the contract.\n- Liability to a co-insured under the same policy (e.g. one household\n  member suing another).\n- Damage to property owned by, rented to, or in the care of the\n  policyholder."
+  },
+  "POLICY-LIABILITY-01::Deductible & Limits": {
+    "document_id": "POLICY-LIABILITY-01",
+    "section": "Deductible & Limits",
+    "text": "- No deductible applies to liability payouts to third parties.\n- Per-occurrence limit: $100,000 bodily injury / $50,000 property damage\n  under this policy tier, unless a higher-limit endorsement is on file."
+  },
+  "POLICY-LIABILITY-01::Claim Filing Requirements": {
+    "document_id": "POLICY-LIABILITY-01",
+    "section": "Claim Filing Requirements",
+    "text": "Claims must be reported as soon as reasonably possible, and always within\n14 days of the policyholder becoming aware of a potential claim (including\nbeing notified of a lawsuit or demand letter). Any correspondence from the\nthird party or their attorney must be forwarded immediately; the\npolicyholder should not admit fault or negotiate directly."
+  }
+}

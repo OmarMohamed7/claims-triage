@@ -15,10 +15,10 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
+
 
 class ClaimType(str, Enum):
     AUTO_COLLISION = "auto_collision"
@@ -51,6 +51,7 @@ class EscalationReason(str, Enum):
 # 1. Raw input -> Intake Agent
 # ---------------------------------------------------------------------------
 
+
 class ClaimSubmission(BaseModel):
     """Whatever arrives at the front door: a form, an email body, a PDF dump."""
 
@@ -64,6 +65,7 @@ class ClaimSubmission(BaseModel):
 # ---------------------------------------------------------------------------
 # 2. Intake Agent output -> everything downstream
 # ---------------------------------------------------------------------------
+
 
 class ExtractedClaim(BaseModel):
     """Structured fields pulled out of a ClaimSubmission by the Intake Agent."""
@@ -79,12 +81,14 @@ class ExtractedClaim(BaseModel):
     incident_description: str
     other_parties_involved: bool = False
     extraction_confidence: float = Field(
-        ..., ge=0, le=1,
-        description="Intake Agent's self-reported confidence in the extraction"
+        ...,
+        ge=0,
+        le=1,
+        description="Intake Agent's self-reported confidence in the extraction",
     )
     missing_fields: list[str] = Field(
         default_factory=list,
-        description="Required fields the agent could not confidently extract"
+        description="Required fields the agent could not confidently extract",
     )
 
     @field_validator("reported_date")
@@ -99,6 +103,7 @@ class ExtractedClaim(BaseModel):
 # ---------------------------------------------------------------------------
 # 3. Policy Retrieval Agent output
 # ---------------------------------------------------------------------------
+
 
 class PolicyClause(BaseModel):
     """A single retrieved clause with enough provenance to audit the decision."""
@@ -126,6 +131,7 @@ class PolicyRetrievalResult(BaseModel):
 # 4. Fraud Risk Agent output (classical ML, not an LLM call)
 # ---------------------------------------------------------------------------
 
+
 class FeatureContribution(BaseModel):
     """One feature's contribution to the risk score, e.g. from SHAP."""
 
@@ -148,6 +154,7 @@ class FraudRiskResult(BaseModel):
 # 5. Adjudication Agent output
 # ---------------------------------------------------------------------------
 
+
 class AdjudicationDecision(BaseModel):
     submission_id: str
     status: DecisionStatus
@@ -160,6 +167,7 @@ class AdjudicationDecision(BaseModel):
 # ---------------------------------------------------------------------------
 # 6. Human Escalation Agent
 # ---------------------------------------------------------------------------
+
 
 class EscalationPacket(BaseModel):
     """Everything a human reviewer needs, assembled from every prior agent."""
@@ -185,6 +193,7 @@ class HumanReviewOutcome(BaseModel):
 # ---------------------------------------------------------------------------
 # 7. Full pipeline state (what LangGraph threads through the graph)
 # ---------------------------------------------------------------------------
+
 
 class PipelineState(BaseModel):
     """The shared state object passed between LangGraph nodes."""
