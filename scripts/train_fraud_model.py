@@ -139,7 +139,7 @@ def main():
     metrics = classification_report(y_test, y_pred, output_dict=True)
     print(json.dumps(metrics, indent=2))
 
-    save_model(pipeline=pipeline, metrics=metrics)
+    save_model(pipeline=pipeline, metrics=metrics) # type: ignore
 
 
 if __name__ == "__main__":
