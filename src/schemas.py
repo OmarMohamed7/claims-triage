@@ -68,38 +68,49 @@ class ClaimSubmission(BaseModel):
 
 
 class ExtractedClaim(BaseModel):
-    """Structured fields pulled out of a ClaimSubmission by the Intake Agent."""
-
     submission_id: str
-    policy_number: str
-    claimant_name: str
-    claim_type: ClaimType
-    incident_date: date
-    reported_date: date
-    claimed_amount: float = Field(..., gt=0)
+
+    policy_number: Optional[str] = None
+    claimant_name: Optional[str] = None
+    claim_type: Optional[ClaimType] = None
+
+    incident_date: Optional[date] = None
+    reported_date: Optional[date] = None
+
+    claimed_amount: Optional[float] = Field(
+        default=None,
+        gt=0,
+    )
+
     incident_location: Optional[str] = None
-    incident_description: str
+    incident_description: Optional[str] = None
+
     other_parties_involved: bool = False
+
     extraction_confidence: float = Field(
         ...,
         ge=0,
         le=1,
-        description="Intake Agent's self-reported confidence in the extraction",
     )
+
     missing_fields: list[str] = Field(
         default_factory=list,
-        description="Required fields the agent could not confidently extract",
     )
 
     @field_validator("reported_date")
     @classmethod
-    def reported_after_incident(cls, v: date, info):
+    def reported_after_incident(cls, v, info):
         incident = info.data.get("incident_date")
-        if incident and v < incident:
-            raise ValueError("reported_date cannot be before incident_date")
+
+        if v is None or incident is None:
+            return v
+
+        if v < incident:
+            raise ValueError(
+                "reported_date cannot be before incident_date"
+            )
+
         return v
-
-
 # ---------------------------------------------------------------------------
 # 3. Policy Retrieval Agent output
 # ---------------------------------------------------------------------------
