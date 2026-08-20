@@ -22,7 +22,7 @@ Chunk `data/policy_docs/*.md` by section, embed each chunk with the
 configured embedding model, write the embeddings into a Qdrant collection
 (dense, embedded/on-disk mode — no separate server) and build a BM25 corpus
 (sparse), and persist both plus a chunk docstore to
-`settings.paths.qdrant_path`.
+`config.paths.qdrant_path`.
 
 **Done when:** running the script produces on-disk index artifacts that
 Phase 3 can load.

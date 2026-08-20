@@ -3,7 +3,7 @@
 # See PLAN.md, Phase 5.
 #
 # TODO: apply_rules(claim, policy_result, fraud_result) -> AdjudicationDecision | None
-# - Fast-path rule layer, using settings.thresholds. Return a decision if
+# - Fast-path rule layer, using config.thresholds. Return a decision if
 #   the rules are conclusive, otherwise None so the caller falls back to
 #   LLM reasoning.
 # - Auto-escalate (no LLM needed) when:
@@ -24,7 +24,7 @@
 #
 # TODO: adjudicate(claim, policy_result, fraud_result) -> AdjudicationDecision
 # - Try apply_rules() first; return its result if not None.
-# - Otherwise, prompt the LLM (settings.models) with all three upstream
+# - Otherwise, prompt the LLM (config.models) with all three upstream
 #   results and ask for a status + reasoning + escalation_reasons. Treat
 #   the LLM here as a reasoning/justification layer, not a source of new
 #   facts — it shouldn't invent coverage or fraud numbers.

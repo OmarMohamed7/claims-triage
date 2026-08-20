@@ -36,6 +36,9 @@ class Thresholds:
 
     # Below this, Policy Retrieval is considered inconclusive.
     min_retrieval_confidence: float = 0.65
+    
+    # Top-k results to retrieve from Qdrant and BM25 for policy retrieval
+    top_k_policy_retrieval: int = 5
 
 
 @dataclass
@@ -59,10 +62,10 @@ class PathConfig:
 
 
 @dataclass
-class Settings:
+class Config:
     thresholds: Thresholds = field(default_factory=Thresholds)
     models: ModelConfig = field(default_factory=ModelConfig)
     paths: PathConfig = field(default_factory=PathConfig)
 
 
-settings = Settings()
+config = Config()

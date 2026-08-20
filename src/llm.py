@@ -15,7 +15,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
-from src.config import settings
+from src.config import config
 
 
 class LLMProvider(ABC):
@@ -44,8 +44,8 @@ class OllamaProvider(LLMProvider):
 
 _PROVIDER_FACTORIES = {
     "ollama": lambda: OllamaProvider(
-        model=settings.models.llm_model,
-        base_url=settings.models.ollama_base_url,
+        model=config.models.llm_model,
+        base_url=config.models.ollama_base_url,
     ),
 }
 
@@ -53,7 +53,7 @@ _PROVIDER_FACTORIES = {
 @lru_cache(maxsize=None)
 def get_llm() -> LLMProvider:
     """Return the configured LLMProvider (LLM_PROVIDER in .env), cached."""
-    provider_name = settings.models.llm_provider
+    provider_name = config.models.llm_provider
     try:
         factory = _PROVIDER_FACTORIES[provider_name]
     except KeyError:

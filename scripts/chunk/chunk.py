@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import itertools
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from scripts.build_policy_index import Document
+if TYPE_CHECKING:
+    from scripts.build_policy_index import Document
 
 
 @dataclass
@@ -51,7 +55,7 @@ class StructureAwareChunker(Chunk):
 
         document_id = doc_id_match.group(1).strip()
 
-        chunks = []
+        chunks: list[PolicyChunk] = []
         for i, heading in enumerate(headings):
             section = heading.group(1).strip()
             start = heading.end()

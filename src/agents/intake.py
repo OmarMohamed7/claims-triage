@@ -2,7 +2,7 @@
 # See PLAN.md, Phase 2.
 #
 # TODO:
-# - Build a prompt instructing the LLM (settings.models.llm_provider /
+# - Build a prompt instructing the LLM (config.models.llm_provider /
 #   llm_model) to pull out every ExtractedClaim field from raw_text.
 # - Ask the model to self-report `extraction_confidence` (0-1) and list any
 #   fields it could not confidently fill in `missing_fields`.

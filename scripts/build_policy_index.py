@@ -21,7 +21,8 @@ from qdrant_client.models import Distance, PointStruct, VectorParams
 from rank_bm25 import BM25Okapi
 
 from scripts.chunk.chunk import PolicyChunk, RecursiveChunker, StructureAwareChunker
-from src.config import settings
+from src.config import config
+from src.text_utils import STOPWORDS
 
 POLICIES_PATH = "data/policy_docs/"
 
@@ -47,7 +48,7 @@ class FileLoader(Loader):
         self.path = path
 
     def load(self) -> list[Document]:
-        docs = []
+        docs: list[Document] = []
         actual_path = Path(self.path)
 
         if actual_path.is_dir() and actual_path.exists():
@@ -107,18 +108,22 @@ def load_and_chunk_docs() -> list[PolicyChunk]:
 
 
 def build_index(chunks: list[PolicyChunk]) -> None:
-    embedding_model = OllamaEmbeddings(model=settings.models.embedding_model)
+    embedding_model = OllamaEmbeddings(model=config.models.embedding_model)
 
     texts = [chunk.text for chunk in chunks]
     embeddings = embedding_model.embed_documents(texts)
 
-    tokenized_corpus = [text.split() for text in texts]
+    # Stopwords filtered here and in search_bm25's query tokenization --
+    # both sides need to match.
+    tokenized_corpus = [
+        [t for t in text.split() if t.lower() not in STOPWORDS] for text in texts
+    ]
     # BM25 (Best Matching 25) is a classic ranking algorithm used by search engines to score and rank documents based on exact keyword matches
     bm25 = BM25Okapi(tokenized_corpus)
 
-    index_dir = Path(settings.paths.qdrant_path)
+    index_dir = Path(config.paths.qdrant_path)
     index_dir.mkdir(parents=True, exist_ok=True)
-    collection_name = settings.paths.qdrant_collection_name
+    collection_name = config.paths.qdrant_collection_name
 
     # Embedded/on-disk mode -- no separate Qdrant server needed.
     # We Can create a seprate server

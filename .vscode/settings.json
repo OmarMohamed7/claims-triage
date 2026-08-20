@@ -1,0 +1,27 @@
+{
+    "python.languageServer": "Pylance",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.callArgumentNames": "partial",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportUnknownMemberType": "warning",
+        "reportUnknownArgumentType": "none",
+        "reportUnknownVariableType": "warning",
+        "reportOptionalSubscript": "none",
+        "reportOptionalMemberAccess": "error",
+        "reportOptionalCall": "error",
+        "reportReturnType": "error",
+        "reportArgumentType": "error",
+        "reportAssignmentType": "error",
+        "reportUnusedImport": "warning",
+        "reportUnusedVariable": "warning"
+    }
+}

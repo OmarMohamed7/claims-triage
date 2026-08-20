@@ -53,7 +53,7 @@ object as the pipeline runs.
 
 ```
 src/
-  config.py    # Central settings: decision thresholds, model/provider config, paths
+  config.py    # Central config: decision thresholds, model/provider config, paths
   schemas.py   # Shared Pydantic data contracts for every agent in the pipeline
 tests/
   test_schemas.py
@@ -76,16 +76,16 @@ cp .env.example .env
 
 ### Configuration
 
-Runtime settings live in `src/config.py` and are overridable via environment
+Runtime config live in `src/config.py` and are overridable via environment
 variables (see `.env.example`):
 
-| Variable | Purpose |
-|---|---|
-| `LLM_PROVIDER` / `LLM_MODEL` | LLM used by Intake, Policy synthesis, and Adjudication agents |
-| `ANTHROPIC_API_KEY` | API key for the LLM provider |
-| `EMBEDDING_MODEL` | Embedding model for policy document retrieval |
-| `DATA_DIR`, `POLICY_DOCS_DIR`, `QDRANT_PATH`, `QDRANT_COLLECTION_NAME`, `RAW_CLAIMS_DATASET` | Data paths |
-| `FRAUD_MODEL_PATH` | Path to the trained fraud classifier |
+| Variable                                                                                     | Purpose                                                       |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `LLM_PROVIDER` / `LLM_MODEL`                                                                 | LLM used by Intake, Policy synthesis, and Adjudication agents |
+| `ANTHROPIC_API_KEY`                                                                          | API key for the LLM provider                                  |
+| `EMBEDDING_MODEL`                                                                            | Embedding model for policy document retrieval                 |
+| `DATA_DIR`, `POLICY_DOCS_DIR`, `QDRANT_PATH`, `QDRANT_COLLECTION_NAME`, `RAW_CLAIMS_DATASET` | Data paths                                                    |
+| `FRAUD_MODEL_PATH`                                                                           | Path to the trained fraud classifier                          |
 
 Decision boundaries (fraud auto-escalate threshold, high-value claim cutoff,
 minimum extraction/retrieval confidence, etc.) are defined in the

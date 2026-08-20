@@ -3,7 +3,7 @@
 # TODO:
 # - score_fraud_risk() for a policy_number present in data/raw/claims.csv
 #   returns a FraudRiskResult with risk_score in [0, 1] and a risk_tier
-#   consistent with settings.thresholds boundaries.
+#   consistent with config.thresholds boundaries.
 # - lookup_policyholder_profile() for an unknown policy_number behaves as
 #   decided in the TODO in fraud_risk.py (raises / returns a default) —
 #   pin that behavior down with a test once implemented.

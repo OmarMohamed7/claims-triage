@@ -3,7 +3,7 @@
 # See PLAN.md, Phase 4.
 #
 # TODO: load_model()
-# - joblib.load(settings.models.fraud_model_path); cache it so repeated
+# - joblib.load(config.models.fraud_model_path); cache it so repeated
 #   calls don't hit disk. Raise a clear error if the file is missing (i.e.
 #   scripts/train_fraud_model.py hasn't been run yet).
 #
@@ -11,7 +11,7 @@
 # - Mock policyholder/incident lookup, keyed by PolicyNumber, standing in
 #   for a real policy system (see scripts/train_fraud_model.py docstring
 #   for why data/raw/claims.csv is reused here).
-# - Read data/raw/claims.csv (settings.paths.raw_claims_dataset), find the
+# - Read data/raw/claims.csv (config.paths.raw_claims_dataset), find the
 #   row matching policy_number, and return it as a dict of the same columns
 #   the model was trained on (i.e. everything except PolicyNumber and
 #   FraudFound_P — see DROP_COLS/TARGET_COL in scripts/train_fraud_model.py).
@@ -24,7 +24,7 @@
 #   build the same feature row shape used in training.
 # - model.predict_proba(...) -> risk_score in [0, 1].
 # - Bucket risk_score into risk_tier ("low"/"medium"/"high") using
-#   settings.thresholds.fraud_auto_approve_ceiling / fraud_auto_escalate as
+#   config.thresholds.fraud_auto_approve_ceiling / fraud_auto_escalate as
 #   the boundaries.
 # - model_version: read from models/fraud_classifier_metrics.json or
 #   hardcode a version string bumped alongside retraining.
