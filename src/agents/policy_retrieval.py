@@ -74,7 +74,7 @@ def load_index() -> tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str], fr
 
     stopwords = GENERIC_STOPWORDS | load_domain_stopwords(index_dir)
 
-    _index_cache = (quadrant_client, bm25, docstore, list(docstore.keys()), stopwords)
+    _index_cache = (quadrant_client, bm25, docstore, list(docstore.keys()), stopwords) # pyright: ignore[reportUnknownVariableType]
     return _index_cache
 
 def retrieve_policy(claim: ExtractedClaim) -> PolicyRetrievalResult:
@@ -201,7 +201,7 @@ def search_bm25(
     '''
     
     tokens = [t for t in query.split() if t.lower() not in stopwords]
-    scores = bm25.get_scores(tokens)
+    scores = bm25.get_scores(tokens) # type: ignore
     max_score: float64 | float = max(scores) if len(scores) else 0.0
 
     records = list(docstore.values())

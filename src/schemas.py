@@ -100,17 +100,17 @@ class ExtractedClaim(BaseModel):
     @field_validator("reported_date")
     @classmethod
     def reported_after_incident(cls, v, info):
-        incident = info.data.get("incident_date")
+        incident = info.data.get("incident_date") # type: ignore
 
         if v is None or incident is None:
-            return v
+            return v # type: ignore
 
         if v < incident:
             raise ValueError(
                 "reported_date cannot be before incident_date"
             )
 
-        return v
+        return v # type: ignore
 # ---------------------------------------------------------------------------
 # 3. Policy Retrieval Agent output
 # ---------------------------------------------------------------------------
@@ -133,7 +133,7 @@ class PolicyRetrievalResult(BaseModel):
     )
     deductible: Optional[float] = None
     coverage_limit: Optional[float] = None
-    relevant_clauses: list[PolicyClause] = Field(default_factory=list)
+    relevant_clauses: list[PolicyClause] = Field(default_factory=list) # type: ignore
     exclusions_matched: list[str] = Field(default_factory=list)
     retrieval_confidence: float = Field(..., ge=0, le=1)
 
@@ -157,7 +157,7 @@ class FraudRiskResult(BaseModel):
     submission_id: str
     risk_score: float = Field(..., ge=0, le=1)
     risk_tier: str = Field(..., description="e.g. 'low', 'medium', 'high'")
-    top_contributing_features: list[FeatureContribution] = Field(default_factory=list)
+    top_contributing_features: list[FeatureContribution] = Field(default_factory=list) # type: ignore
     model_version: str
 
 
@@ -171,7 +171,7 @@ class AdjudicationDecision(BaseModel):
     status: DecisionStatus
     approved_amount: Optional[float] = None
     reasoning: str = Field(..., description="Human-readable justification")
-    escalation_reasons: list[EscalationReason] = Field(default_factory=list)
+    escalation_reasons: list[EscalationReason] = Field(default_factory=list) # type: ignore
     decided_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

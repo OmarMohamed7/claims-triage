@@ -2,18 +2,14 @@
 #
 # This dataset (data/raw/claims.csv) is a set of past auto insurance claims,
 # one row per claim, each with a policyholder/vehicle/incident profile and a
-# FraudFound_P label. In this project it does double duty: it trains the
-# model here, and at inference time (src/agents/fraud_risk.py) the same file
-# is used as a mock policyholder lookup table keyed by PolicyNumber, standing
-# in for a real policy/claims-history system this demo doesn't have.
-#
+# FraudFound_P label. 
+
 # Run with: uv run python scripts/train_fraud_model.py
-# See PLAN.md, Phase 0.
+# PLAN.md, Phase 0.
 #
 
 from pathlib import Path
 import pandas as pd
-from pandas import Series
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -24,15 +20,6 @@ from xgboost import XGBClassifier
 import joblib
 import json
 from sklearn.impute import SimpleImputer
-
-
-# TODO: load_data() -> (X, y)
-# - Read data/raw/claims.csv.
-# - y = the FraudFound_P column.
-# - X = everything else, minus PolicyNumber (it's a row identifier used for
-#   the lookup table at inference, not a predictive feature — including it
-#   would let the model memorize rows instead of learning from the actual
-#   profile/incident fields).
 
 
 # load the data from the csv file
@@ -49,24 +36,41 @@ def load_data() -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
-#
-# TODO: build_pipeline(X, y) -> sklearn Pipeline
-# - ColumnTransformer: one-hot encode the categorical (object dtype)
-#   columns, passthrough the numeric columns.
-# - Dataset is heavily imbalanced (~6% fraud) — weight the positive class
-#   (e.g. XGBClassifier's scale_pos_weight = n_n
-# eg / n_pos) so the model
-#   doesn't just learn to predict "not fraud" every time.
-# - Wrap preprocessing + classifier in a single Pipeline so joblib can
-#   serialize the whole thing as one artifact.
-#
-
-
 def build_pipeline(X: pd.DataFrame, y) -> Pipeline:
     str_cols = X.select_dtypes(include=["object"]).columns.tolist()
     num_cols = X.select_dtypes(include=["float64", "int64"]).columns.tolist()
 
-    scale_pos_weight = len(y[y == 0]) / len(y[y == 1])
+    # scale_pos_weight helps the model pay more attention to the minority class.
+    '''
+    Usually, your dataset might look like:
+
+    Normal transactions (0): 9,000
+    Fraud transactions  (1): 1,000
+    
+    So:
+    len(y[y == 0]) returns: 9000
+    And:
+    len(y[y == 1]) returns: 1000
+    Therefore:
+    scale_pos_weight = 9000 / 1000
+    Result:
+    9.0
+    
+    What does scale_pos_weight = 9.0 mean?
+
+    It tells the model:
+    "Class 1 is rare, so mistakes involving class 1 should be given more importance."
+    
+    Without this, the model might learn:
+    99% → class 0
+    1%  → class 1
+
+    and simply predict almost everything as:
+    0
+    It could still get high accuracy but be terrible at detecting fraud
+    '''
+    
+    scale_pos_weight: float = len(y[y == 0]) / len(y[y == 1])
 
     num_pipeline = Pipeline(
         [
@@ -132,15 +136,15 @@ def main():
     pipeline: Pipeline = build_pipeline(X, y)
     
     
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_test, y_train, y_test = train_test_split( # pyright: ignore[reportUnknownVariableType]
         X, y, test_size=0.2, random_state=42, stratify=y
     )
     
 
     print(y.value_counts(normalize=True))
-    pipeline.fit(X=X_train, y=y_train)
-    y_pred = pipeline.predict(X_test)
-    metrics = classification_report(y_test, y_pred, output_dict=True)
+    pipeline.fit(X=X_train, y=y_train) # type: ignore
+    y_pred = pipeline.predict(X_test) # type: ignore
+    metrics = classification_report(y_test, y_pred, output_dict=True) # type: ignore
     print(json.dumps(metrics, indent=2))
 
     save_model(pipeline=pipeline, metrics=metrics) # type: ignore

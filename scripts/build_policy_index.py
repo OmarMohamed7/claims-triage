@@ -34,7 +34,7 @@ class Document:
     text: str
     source_ref: str
     source_type: str = "file"
-    metadata: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict) # type: ignore
 
 
 class Loader(ABC):

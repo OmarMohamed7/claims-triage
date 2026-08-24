@@ -117,7 +117,7 @@ def score_fraud_risk(claim: ExtractedClaim) -> FraudRiskResult:
             model_version="",
         )
 
-    proba = model.predict_proba(pd.DataFrame([profile]))[0]
+    proba = model.predict_proba(pd.DataFrame([profile]))[0] # type: ignore
     fraud_class_index = list(model.classes_).index(1)
     risk_score = float(proba[fraud_class_index])
 
