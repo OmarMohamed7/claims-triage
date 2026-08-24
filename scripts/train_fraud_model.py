@@ -13,12 +13,13 @@
 
 from pathlib import Path
 import pandas as pd
+from pandas import Series
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split # pyright: ignore[reportUnknownVariableType]
+from sklearn.metrics import classification_report # pyright: ignore[reportUnknownVariableType]
 from xgboost import XGBClassifier
 import joblib
 import json
@@ -35,15 +36,15 @@ from sklearn.impute import SimpleImputer
 
 
 # load the data from the csv file
-def load_data():
+def load_data() -> tuple[pd.DataFrame, pd.Series]:
     data_path = Path(__file__).parent.parent / "data" / "raw"
-    df = pd.read_csv(data_path / "claims.csv")
+    df: pd.DataFrame = pd.read_csv(data_path / "claims.csv")
     df.drop(columns=["PolicyNumber"], inplace=True)
     target_column = "FraudFound_P"
-    X = df.drop(columns=[target_column])
+    X: pd.DataFrame = df.drop(columns=[target_column])
     # get str columns to be encoded
 
-    y = df[target_column]
+    y: pd.Series = df[target_column]
 
     return X, y
 
@@ -61,7 +62,7 @@ def load_data():
 #
 
 
-def build_pipeline(X, y):
+def build_pipeline(X: pd.DataFrame, y) -> Pipeline:
     str_cols = X.select_dtypes(include=["object"]).columns.tolist()
     num_cols = X.select_dtypes(include=["float64", "int64"]).columns.tolist()
 
@@ -120,7 +121,7 @@ def save_model(pipeline: Pipeline, metrics: dict):
     ModelPath = Path(__file__).parent.parent / "models"
     if not ModelPath.exists():
         ModelPath.mkdir(parents=True, exist_ok=True)
-    joblib.dump(pipeline, ModelPath / "fraud_classifier.joblib")
+    joblib.dump(pipeline, ModelPath / "fraud_classifier.joblib") # type: ignore
     metrics_path = ModelPath / "fraud_classifier_metrics.json"
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=2)
@@ -128,13 +129,16 @@ def save_model(pipeline: Pipeline, metrics: dict):
 
 def main():
     X, y = load_data()
-    pipeline = build_pipeline(X, y)
+    pipeline: Pipeline = build_pipeline(X, y)
+    
+    
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
+    
 
     print(y.value_counts(normalize=True))
-    pipeline.fit(X_train, y_train)
+    pipeline.fit(X=X_train, y=y_train)
     y_pred = pipeline.predict(X_test)
     metrics = classification_report(y_test, y_pred, output_dict=True)
     print(json.dumps(metrics, indent=2))

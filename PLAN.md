@@ -5,6 +5,63 @@ Each phase below maps to one or more TODO-stubbed files — signatures and
 docstrings are in place, logic is not. Implement in order; later phases
 depend on earlier ones.
 
+## Pipeline Overview
+
+```mermaid
+flowchart TD
+    Submission(["ClaimSubmission"]) --> Intake
+
+    Intake["Intake Agent
+    extract_claim(submission)"]
+    Intake -->|ExtractedClaim| ConfCheck
+
+    ConfCheck{"extraction_confidence
+    < min_extraction_confidence?"}
+    ConfCheck -->|yes| HumanEsc
+    ConfCheck -->|no| FraudRisk
+
+    FraudRisk["Fraud Risk Agent
+    score_fraud_risk(claim)"]
+    FraudRisk --> PolicyRetrieval
+
+    PolicyRetrieval["Policy Retrieval Agent
+    retrieve_policy(claim)"]
+
+    PolicyRetrieval -->|PolicyRetrievalResult| Adjudication
+    FraudRisk -.->|FraudRiskResult| Adjudication
+    Intake -.->|ExtractedClaim| Adjudication
+
+    Adjudication["Adjudication Agent
+    apply_rules(...) / adjudicate(...)"]
+    Adjudication -->|AdjudicationDecision| StatusCheck
+
+    StatusCheck{"status in ESCALATED,
+    PENDING_HUMAN_REVIEW?"}
+    StatusCheck -->|yes| HumanEsc
+    StatusCheck -->|no| End(["END"])
+
+    HumanEsc["Human Escalation Agent
+    build_escalation_packet(...)"]
+    HumanEsc -->|EscalationPacket| End
+```
+
+| Agent | Function | Input(s) | Output |
+|---|---|---|---|
+| Intake | `extract_claim(submission)` | `ClaimSubmission` | `ExtractedClaim` |
+| Policy Retrieval | `retrieve_policy(claim)` | `ExtractedClaim` | `PolicyRetrievalResult` |
+| Fraud Risk | `score_fraud_risk(claim)` | `ExtractedClaim` | `FraudRiskResult` |
+| Adjudication | `adjudicate(claim, policy_result, fraud_result)` | `ExtractedClaim`, `PolicyRetrievalResult`, `FraudRiskResult` | `AdjudicationDecision` |
+| Human Escalation | `build_escalation_packet(claim, policy_result, fraud_result, decision)` | `ExtractedClaim`, `PolicyRetrievalResult`, `FraudRiskResult`, `AdjudicationDecision` | `EscalationPacket` |
+
+Fraud Risk runs before Policy Retrieval: it's a fast local `sklearn` call
+with no external dependency, while Policy Retrieval makes live embedding +
+Qdrant + BM25 calls. Neither has a data dependency on the other's output
+(Adjudication needs both regardless), so this ordering is about surfacing
+the cheap signal first, not correctness. Human Escalation is reached two
+ways: directly from the confidence check (low-confidence extraction,
+skipping Fraud Risk and Policy Retrieval entirely) or from Adjudication's
+status check.
+
 ## Phase 0 — Foundations (done)
 
 - `src/schemas.py` — shared Pydantic contracts for every agent

@@ -55,6 +55,7 @@ class ModelConfig:
 @dataclass
 class PathConfig:
     data_dir: str = os.getenv("DATA_DIR", "data")
+    model_dir: str = os.getenv("MODEL_DIR",  "models")
     policy_docs_dir: str = os.getenv("POLICY_DOCS_DIR", "data/policy_docs")
     qdrant_path: str = os.getenv("QDRANT_PATH", "data/qdrant")
     qdrant_collection_name: str = os.getenv("QDRANT_COLLECTION_NAME", "policy_clauses")

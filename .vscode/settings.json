@@ -3,7 +3,7 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/src"
     ],
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "standard",
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.completeFunctionParens": true,

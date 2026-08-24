@@ -18,7 +18,7 @@ from qdrant_client import QdrantClient
 
 from src.config import config
 from src.schemas import ExtractedClaim, PolicyClause, PolicyRetrievalResult
-from src.text_utils import STOPWORDS
+from src.text_utils import GENERIC_STOPWORDS, load_domain_stopwords
 from rank_bm25 import BM25Okapi
 
 
@@ -39,10 +39,10 @@ def _parse_dollar_amount(pattern: re.Pattern[str], text: str) -> float | None:
     return float(match.group(1).replace(",", ""))
 
 
-_index_cache: tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str]] | None = None
+_index_cache: tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str], frozenset[str]] | None = None
 
 
-def load_index() -> tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str]]:
+def load_index() -> tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str], frozenset[str]]:
     """Load the Qdrant + BM25 index artifacts for policy retrieval.
 
     Cached at module level: local-mode Qdrant holds an exclusive file lock
@@ -51,10 +51,12 @@ def load_index() -> tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str]]:
     instance". One client for the process's lifetime avoids that.
 
     Returns:
-        tuple: (qdrant_client, bm25_index, docstore, chunk_ids). chunk_ids
-        is docstore's keys in insertion order, which lines up 1:1 with the
-        BM25 corpus order and the Qdrant point ids — all three were built
-        from the same `chunks` list in scripts/build_policy_index.py.
+        tuple: (qdrant_client, bm25_index, docstore, chunk_ids, stopwords).
+        chunk_ids is docstore's keys in insertion order, which lines up 1:1
+        with the BM25 corpus order and the Qdrant point ids -- all three
+        were built from the same `chunks` list in
+        scripts/build_policy_index.py. stopwords is GENERIC_STOPWORDS plus
+        the domain stopwords derived from this same build.
     """
     global _index_cache
     if _index_cache is not None:
@@ -70,23 +72,25 @@ def load_index() -> tuple[QdrantClient, BM25Okapi, dict[str, Any], list[str]]:
     with open(index_dir / "docstore.json") as f:
         docstore: dict = json.load(f)
 
-    _index_cache = (quadrant_client, bm25, docstore, list(docstore.keys()))
+    stopwords = GENERIC_STOPWORDS | load_domain_stopwords(index_dir)
+
+    _index_cache = (quadrant_client, bm25, docstore, list(docstore.keys()), stopwords)
     return _index_cache
 
 def retrieve_policy(claim: ExtractedClaim) -> PolicyRetrievalResult:
-    
+
     claim_type = claim.claim_type.value.replace("_", " ") if claim.claim_type is not None else ""
 
     query = f"${claim_type} {claim.incident_description}"
     embedded_query = embed_query(query = query)
 
-    qdrant_client, bm25, docstore, _ = load_index()
+    qdrant_client, bm25, docstore, _, stopwords = load_index()
 
     # embedding search
     dense_res = search_qdrant(embedded_query, qdrant_client)
 
     # Sparse Retrieval
-    sparse_res: Any = search_bm25(query, bm25, docstore)
+    sparse_res: Any = search_bm25(query, bm25, docstore, stopwords)
     
     # Fusing ( Merging the embedding search res+ sparse res)
     fused_res = fuse_result(dense_res, sparse_res)
@@ -170,7 +174,7 @@ def search_qdrant(embeddings: list[float], qdrant_client: QdrantClient, top_k: i
     ]
  
 def search_bm25(
-    query: str, bm25: BM25Okapi, docstore: dict[str, Any], top_k: int = 5
+    query: str, bm25: BM25Okapi, docstore: dict[str, Any], stopwords: frozenset[str], top_k: int = 5
 ) -> list[PolicyClause]:
     
     '''
@@ -196,7 +200,7 @@ def search_bm25(
     appear explicitly.
     '''
     
-    tokens = [t for t in query.split() if t.lower() not in STOPWORDS]
+    tokens = [t for t in query.split() if t.lower() not in stopwords]
     scores = bm25.get_scores(tokens)
     max_score: float64 | float = max(scores) if len(scores) else 0.0
 

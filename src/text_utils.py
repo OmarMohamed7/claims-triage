@@ -1,15 +1,43 @@
-# Shared between scripts/build_policy_index.py and
-# src/agents/policy_retrieval.py so BM25 tokenizes corpus and query the
-# same way.
-STOPWORDS = frozenset(
+import json
+from pathlib import Path
+
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+# sklearn's list is unusually aggressive and includes some words that are
+# peril-discriminative in this corpus: "fire" is one of the 8 coverage
+# types (property_fire.md), and "third" appears only in liability.md's
+# "third party" language (verified against the actual corpus).
+_PROTECTED = frozenset({"fire", "third"})
+GENERIC_STOPWORDS = frozenset(ENGLISH_STOP_WORDS) - _PROTECTED
+
+DOMAIN_STOPWORDS_FILENAME = "domain_stopwords.json"
+DOMAIN_STOPWORD_DOC_FREQ_THRESHOLD = 0.6
+
+
+def derive_domain_stopwords(texts: list[str]) -> frozenset[str]:
+    """Words near-universal in this specific corpus (e.g. "coverage",
+    appearing in most policy chunks) even though they're real English
+    words elsewhere -- a generic stopword list can't know about these.
     """
-    a an and are as at be by for from has have he in is it its of on
-    that the to was were will with i my me we our you your she they
-    them this these those but or not no so if than then there here
-    when where which who whom what how why do does did done having
-    been being am during into over under again further once up down
-    out off above below between through before after about against
-    all any both each few more most other some such only own same too
-    very can just should now
-    """.split()
-)
+    doc_freq: dict[str, int] = {}
+    for text in texts:
+        for token in {t.lower() for t in text.split() if t.lower() not in GENERIC_STOPWORDS}:
+            doc_freq[token] = doc_freq.get(token, 0) + 1
+
+    n_docs = len(texts)
+    if not n_docs:
+        return frozenset()
+
+    return frozenset(
+        word for word, freq in doc_freq.items() if freq / n_docs >= DOMAIN_STOPWORD_DOC_FREQ_THRESHOLD
+    )
+
+
+def save_domain_stopwords(index_dir: Path, domain_stopwords: frozenset[str]) -> None:
+    with open(index_dir / DOMAIN_STOPWORDS_FILENAME, "w") as f:
+        json.dump(sorted(domain_stopwords), f)
+
+
+def load_domain_stopwords(index_dir: Path) -> frozenset[str]:
+    with open(index_dir / DOMAIN_STOPWORDS_FILENAME) as f:
+        return frozenset(json.load(f))
