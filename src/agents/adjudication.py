@@ -1,32 +1,245 @@
 # Adjudication Agent (Manager/Planner) — combines Intake, Policy Retrieval,
 # and Fraud Risk outputs into a final AdjudicationDecision.
 # See PLAN.md, Phase 5.
-#
-# TODO: apply_rules(claim, policy_result, fraud_result) -> AdjudicationDecision | None
-# - Fast-path rule layer, using config.thresholds. Return a decision if
-#   the rules are conclusive, otherwise None so the caller falls back to
-#   LLM reasoning.
-# - Auto-escalate (no LLM needed) when:
-#   fraud_result.risk_score > thresholds.fraud_auto_escalate, OR
-#   claim.claimed_amount > thresholds.high_value_claim_amount, OR
-#   claim.extraction_confidence < thresholds.min_extraction_confidence, OR
-#   policy_result.retrieval_confidence < thresholds.min_retrieval_confidence, OR
-#   policy_result.is_covered in (None, False).
-#   Populate escalation_reasons with every EscalationReason that applies
-#   (a claim can hit more than one).
-# - Auto-approve (no LLM needed) when:
-#   fraud_result.risk_score < thresholds.fraud_auto_approve_ceiling AND
-#   policy_result.is_covered is True AND both confidences clear their
-#   minimums AND claimed_amount is under the high-value cutoff.
-#   approved_amount should respect policy_result.deductible /
-#   coverage_limit, not just claim.claimed_amount.
-# - Anything else: return None (ambiguous — let the LLM reason about it).
-#
-# TODO: adjudicate(claim, policy_result, fraud_result) -> AdjudicationDecision
-# - Try apply_rules() first; return its result if not None.
-# - Otherwise, prompt the LLM (config.models) with all three upstream
-#   results and ask for a status + reasoning + escalation_reasons. Treat
-#   the LLM here as a reasoning/justification layer, not a source of new
-#   facts — it shouldn't invent coverage or fraud numbers.
-# - Always populate `reasoning` with a human-readable justification, since
-#   it's what an auditor or the Human Escalation Agent will read.
+
+from pydantic import ValidationError
+
+from src.config import config
+from src.llm import LLMProvider, get_llm
+from src.schemas import AdjudicationDecision, DecisionStatus, ExtractedClaim, FraudRiskResult, LLMAdjudicationResult, PolicyRetrievalResult
+
+MAX_ADJUDICATION_RETRIES = 2
+
+
+def adjudicate(claim: ExtractedClaim, policy_result: PolicyRetrievalResult, fraud_result: FraudRiskResult) -> AdjudicationDecision:
+    
+    decision: AdjudicationDecision | None = apply_rule(
+        claim,
+        policy_result,
+        fraud_result
+    )
+    
+    if decision is not None:
+        return decision
+    
+    return adjudicate_with_llm(
+        claim,
+        policy_result,
+        fraud_result
+    )
+    
+    
+def apply_rule(
+    claim: ExtractedClaim, 
+    policy_result: PolicyRetrievalResult, 
+    fraud_result: FraudRiskResult
+) -> AdjudicationDecision | None:
+    
+    # Define Auto Escalate
+    thresholds = config.thresholds
+    
+    reasons: list[str] = []
+
+    fraud_escalate = (
+        fraud_result.risk_score > thresholds.fraud_auto_escalate
+    )
+
+    claim_escalate = (
+        claim.claimed_amount > thresholds.high_value_claim_amount
+        if claim.claimed_amount is not None
+        else False
+    )
+
+    claim_extraction_escalate = (
+        claim.extraction_confidence
+        < thresholds.min_extraction_confidence
+    )
+
+    policy_retrieval_escalate = (
+        policy_result.retrieval_confidence
+        < thresholds.min_retrieval_confidence
+    )
+    
+    if fraud_escalate:
+        reasons.append(
+            f"Fraud risk score ({fraud_result.risk_score:.2f}) "
+            f"exceeds the automatic escalation threshold "
+            f"({thresholds.fraud_auto_escalate:.2f})."
+        )
+
+    if claim_escalate:
+        reasons.append(
+            f"Claimed amount ({claim.claimed_amount}) exceeds the "
+            f"high-value claim threshold "
+            f"({thresholds.high_value_claim_amount})."
+        )
+
+    if claim_extraction_escalate:
+        reasons.append(
+            f"Claim extraction confidence "
+            f"({claim.extraction_confidence:.2f}) is below the "
+            f"minimum required confidence "
+            f"({thresholds.min_extraction_confidence:.2f})."
+        )
+
+    if policy_retrieval_escalate:
+        reasons.append(
+            f"Policy retrieval confidence "
+            f"({policy_result.retrieval_confidence:.2f}) is below the "
+            f"minimum required confidence "
+            f"({thresholds.min_retrieval_confidence:.2f})."
+        )
+
+    if policy_result.is_covered is False:
+        reasons.append(
+            "The retrieved policy information indicates that the claim "
+            "is not covered."
+        )
+
+    elif policy_result.is_covered is None:
+        reasons.append(
+            "Policy coverage could not be determined with sufficient confidence."
+        )
+    
+    if reasons:
+        return AdjudicationDecision(
+            submission_id= claim.submission_id,
+            status= DecisionStatus.ESCALATED,
+            reasoning= "".join(reasons)
+        )
+        
+    # Auto-approve rules
+    fraud_approve = (
+        fraud_result.risk_score
+        < thresholds.fraud_auto_approve_ceiling
+    )
+
+    policy_approve = policy_result.is_covered is True
+
+    extraction_confident = (
+        claim.extraction_confidence
+        >= thresholds.min_extraction_confidence
+    )
+
+    retrieval_confident = (
+        policy_result.retrieval_confidence
+        >= thresholds.min_retrieval_confidence
+    )
+
+    claim_not_high_value = (
+        claim.claimed_amount is not None
+        and claim.claimed_amount
+        < thresholds.high_value_claim_amount
+    )
+
+    if (
+        fraud_approve
+        and policy_approve
+        and extraction_confident
+        and retrieval_confident
+        and claim_not_high_value
+    ):
+        # Calculate approved amount
+        approved_amount: None | float = claim.claimed_amount
+
+        if policy_result.deductible is not None and approved_amount is not None:
+            approved_amount = max(
+                0,
+                approved_amount - policy_result.deductible,
+            )
+
+        if policy_result.coverage_limit is not None and approved_amount is not None:
+            approved_amount = min(
+                approved_amount,
+                policy_result.coverage_limit,
+            )
+
+        return AdjudicationDecision(
+            submission_id=claim.submission_id,
+            status=DecisionStatus.APPROVED,
+            approved_amount=approved_amount,
+            reasoning=(
+                "The claim is covered under the retrieved policy. "
+                "Fraud risk is below the automatic approval threshold, "
+                "claim and policy retrieval confidences meet the required "
+                "minimums, and the claimed amount is below the high-value "
+                "claim threshold."
+            ),
+        )
+    
+    return None
+    
+def adjudicate_with_llm(
+    claim: ExtractedClaim,
+    policy_result: PolicyRetrievalResult,
+    fraud_result: FraudRiskResult,
+) -> AdjudicationDecision:
+
+    prompt = f"""
+        You are an insurance claim adjudication assistant.
+
+        Make a decision based ONLY on the provided information.
+
+        Do not invent or assume facts that are not present in the input.
+
+        CLAIM:
+        {claim.model_dump_json(indent=2)}
+
+        POLICY RESULT:
+        {policy_result.model_dump_json(indent=2)}
+
+        FRAUD RESULT:
+        {fraud_result.model_dump_json(indent=2)}
+
+        Decision rules:
+
+        - Use APPROVED only when the available evidence supports coverage.
+        - Use ESCALATED when the evidence is ambiguous, conflicting,
+        insufficient, or requires human review.
+        - Do not invent fraud scores, coverage limits, deductibles,
+        policy clauses, or claim amounts.
+        - approved_amount must be based only on the provided claimed amount,
+        deductible, and coverage limit.
+        - Always provide clear human-readable reasoning.
+        - Include specific escalation_reasons when escalating.
+
+        Respond with a single valid JSON object, matching exactly this
+        shape, and nothing else (no Markdown, no code fences, no
+        commentary before or after it):
+
+        {{
+            "status": "approved" | "denied" | "escalated" | "pending_human_review",
+            "reasoning": "...",
+            "escalation_reasons": [],
+            "approved_amount": null
+        }}
+        """
+
+    llm: LLMProvider = get_llm()
+
+    last_error: str | None = None
+    for _ in range(MAX_ADJUDICATION_RETRIES + 1):
+        attempt_prompt = prompt
+        if last_error is not None:
+            attempt_prompt = (
+                f"{prompt}\n\nThe previous response was invalid:\n{last_error}"
+                "\n\nReturn corrected JSON only."
+            )
+
+        response_text = llm.generate(attempt_prompt)
+        try:
+            result = LLMAdjudicationResult.model_validate_json(response_text)
+        except ValidationError as e:
+            last_error = e.json()
+            continue
+
+        return AdjudicationDecision(
+            submission_id=claim.submission_id,
+            status=result.status,
+            reasoning=result.reasoning,
+            escalation_reasons=result.escalation_reasons,
+            approved_amount=result.approved_amount,
+        )
+
+    assert last_error is not None
+    raise ValueError(f"LLM adjudication failed after retries: {last_error}")

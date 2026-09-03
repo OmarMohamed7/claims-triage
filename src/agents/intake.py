@@ -77,7 +77,7 @@ def build_extraction_prompt(raw_text: str) -> str:
     )
     output_format_lines = ",\n    ".join(f'"{name}": ...' for name in _EXTRACTABLE_FIELDS)
     return f"""
-You are a claim extraction system.
+You are a claim extraction system Expert.
 
 Your task is to extract exactly the following fields from the provided raw
 text. Use these exact field names — do not invent field names that aren't

@@ -166,6 +166,17 @@ class FraudRiskResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class LLMAdjudicationResult(BaseModel):
+    """Structured shape the LLM reasoning fallback must return. Parsed from
+    the raw JSON string LLMProvider.generate() produces — never treat that
+    string itself as having these attributes."""
+
+    status: DecisionStatus
+    reasoning: str
+    escalation_reasons: list[EscalationReason] = Field(default_factory=list)
+    approved_amount: Optional[float] = None
+
+
 class AdjudicationDecision(BaseModel):
     submission_id: str
     status: DecisionStatus
@@ -173,7 +184,7 @@ class AdjudicationDecision(BaseModel):
     reasoning: str = Field(..., description="Human-readable justification")
     escalation_reasons: list[EscalationReason] = Field(default_factory=list) # type: ignore
     decided_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
+    
 
 # ---------------------------------------------------------------------------
 # 6. Human Escalation Agent
