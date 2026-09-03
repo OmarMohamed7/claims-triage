@@ -99,11 +99,12 @@ def score_fraud_risk(claim: ExtractedClaim) -> FraudRiskResult:
 
     model: Pipeline | None = load_model()
 
+
     if not model or not claim.policy_number:
         return FraudRiskResult(
             submission_id=claim.submission_id,
             risk_score=0,
-            risk_tier="low",
+            risk_tier="unknown",
             model_version="",
         )
 
@@ -113,7 +114,7 @@ def score_fraud_risk(claim: ExtractedClaim) -> FraudRiskResult:
         return FraudRiskResult(
             submission_id=claim.submission_id,
             risk_score=0,
-            risk_tier="low",
+            risk_tier="unknown",
             model_version="",
         )
 

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from src.config import config
 from src.llm import LLMProvider, get_llm
-from src.schemas import AdjudicationDecision, DecisionStatus, ExtractedClaim, FraudRiskResult, LLMAdjudicationResult, PolicyRetrievalResult
+from src.schemas import AdjudicationDecision, DecisionStatus, EscalationReason, ExtractedClaim, FraudRiskResult, LLMAdjudicationResult, PolicyRetrievalResult
 
 MAX_ADJUDICATION_RETRIES = 2
 
@@ -39,9 +39,13 @@ def apply_rule(
     thresholds = config.thresholds
     
     reasons: list[str] = []
+    escalation_reasons: list[EscalationReason] = []
+
+    fraud_unassessed = fraud_result.risk_tier == "unknown"
 
     fraud_escalate = (
-        fraud_result.risk_score > thresholds.fraud_auto_escalate
+        not fraud_unassessed
+        and fraud_result.risk_score > thresholds.fraud_auto_escalate
     )
 
     claim_escalate = (
@@ -59,13 +63,21 @@ def apply_rule(
         policy_result.retrieval_confidence
         < thresholds.min_retrieval_confidence
     )
-    
+
+    if fraud_unassessed:
+        reasons.append(
+            "Fraud risk could not be assessed (no policy number to look "
+            "up or no feature profile available for it)."
+        )
+        escalation_reasons.append(EscalationReason.INSUFFICIENT_FRAUD_DATA)
+
     if fraud_escalate:
         reasons.append(
             f"Fraud risk score ({fraud_result.risk_score:.2f}) "
             f"exceeds the automatic escalation threshold "
             f"({thresholds.fraud_auto_escalate:.2f})."
         )
+        escalation_reasons.append(EscalationReason.HIGH_FRAUD_RISK)
 
     if claim_escalate:
         reasons.append(
@@ -73,6 +85,7 @@ def apply_rule(
             f"high-value claim threshold "
             f"({thresholds.high_value_claim_amount})."
         )
+        escalation_reasons.append(EscalationReason.HIGH_CLAIM_VALUE)
 
     if claim_extraction_escalate:
         reasons.append(
@@ -81,6 +94,7 @@ def apply_rule(
             f"minimum required confidence "
             f"({thresholds.min_extraction_confidence:.2f})."
         )
+        escalation_reasons.append(EscalationReason.LOW_CONFIDENCE_EXTRACTION)
 
     if policy_retrieval_escalate:
         reasons.append(
@@ -89,23 +103,27 @@ def apply_rule(
             f"minimum required confidence "
             f"({thresholds.min_retrieval_confidence:.2f})."
         )
+        escalation_reasons.append(EscalationReason.AMBIGUOUS_POLICY_COVERAGE)
 
     if policy_result.is_covered is False:
         reasons.append(
             "The retrieved policy information indicates that the claim "
             "is not covered."
         )
+        escalation_reasons.append(EscalationReason.AMBIGUOUS_POLICY_COVERAGE)
 
     elif policy_result.is_covered is None:
         reasons.append(
             "Policy coverage could not be determined with sufficient confidence."
         )
-    
+        escalation_reasons.append(EscalationReason.AMBIGUOUS_POLICY_COVERAGE)
+
     if reasons:
         return AdjudicationDecision(
             submission_id= claim.submission_id,
             status= DecisionStatus.ESCALATED,
-            reasoning= "".join(reasons)
+            reasoning= "".join(reasons),
+            escalation_reasons=escalation_reasons,
         )
         
     # Auto-approve rules

@@ -45,6 +45,7 @@ class EscalationReason(str, Enum):
     LOW_CONFIDENCE_EXTRACTION = "low_confidence_extraction"
     CONFLICTING_SIGNALS = "conflicting_signals"
     MANUAL_REVIEW_REQUESTED = "manual_review_requested"
+    INSUFFICIENT_FRAUD_DATA = "insufficient_fraud_data"
 
 
 # ---------------------------------------------------------------------------
@@ -173,7 +174,7 @@ class LLMAdjudicationResult(BaseModel):
 
     status: DecisionStatus
     reasoning: str
-    escalation_reasons: list[EscalationReason] = Field(default_factory=list)
+    escalation_reasons: list[EscalationReason] = Field(default_factory=list) # type: ignore
     approved_amount: Optional[float] = None
 
 

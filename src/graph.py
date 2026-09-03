@@ -19,3 +19,42 @@
 #   route to human_escalation as a safe fallback.
 # - Return the compiled graph so the caller can do
 #   build_pipeline().invoke(PipelineState(submission=...)).
+
+from langgraph.graph import StateGraph
+from src.schemas import PipelineState
+
+from src.agents.intake import extract_claim
+from src.agents.policy_retrieval import retrieve_policy
+from src.agents.fraud_risk import score_fraud_risk
+from src.agents.adjudication import adjudicate
+from src.agents.human_escalation import build_escalation_packet
+
+def build_pipeline() :
+    
+    graph: StateGraph[PipelineState] = StateGraph(state_schema=PipelineState)
+    
+    graph.add_node("intake", extract_claim) # type: ignore
+    graph.add_node("extraction", retrieve_policy) # type: ignore
+    graph.add_node("fraud_risk", score_fraud_risk) # type: ignore
+    graph.add_node("policy_retrieval", retrieve_policy) # type: ignore
+    graph.add_node("adjudication", adjudicate) # type: ignore
+    graph.add_node("human_escalation", build_escalation_packet) # type: ignore
+    
+    graph.add_edge("intake", "extraction")
+    graph.add_conditional_edges("extraction", route_after_extraction)
+    graph.add_edge("fraud_risk", "policy_retrieval")
+    graph.add_edge("policy_retrieval", "adjudication")
+    graph.add_edge("adjudication", "human_escalation", condition=lambda state: state.decision is not None and state.decision.status in ("ESCALATED", "PENDING_HUMAN_REVIEW")) # type: ignore
+    
+    print(graph)
+    
+    return graph
+
+
+def route_after_extraction(state: PipelineState) -> str:
+    """Routes to fraud_risk or human_escalation based on extraction confidence."""
+    if state.extracted_claim is None:
+        raise ValueError("extracted_claim is None; cannot route.")
+    if state.extracted_claim.extraction_confidence < 0.8:
+        return "human_escalation"
+    return "fraud_risk"
