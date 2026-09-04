@@ -12,6 +12,7 @@ import pickle
 import re
 from typing import Any
 
+# from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from numpy import float64
 from qdrant_client import QdrantClient

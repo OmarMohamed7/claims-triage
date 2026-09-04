@@ -24,6 +24,11 @@ dependencies = [
     "ollama>=0.6.2",
 
     "pypdf>=6.14.2",
+
+    # For Visualizing graphs
+    "grandalf>=0.8",
+
+    "langchain_ollama>=1.1.0",
 ]
 
 [dependency-groups]

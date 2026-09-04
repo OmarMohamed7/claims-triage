@@ -1,27 +1,42 @@
 {
-  "0": {
-    "precision": 0.9841565703634669,
-    "recall": 0.728527078302863,
-    "f1-score": 0.8372646184340932,
-    "support": 2899.0
+  "best_params": {
+    "classifier__colsample_bytree": 0.8447411578889518,
+    "classifier__gamma": 0.6974693032602092,
+    "classifier__learning_rate": 0.027010527749605478,
+    "classifier__max_depth": 5,
+    "classifier__min_child_weight": 3,
+    "classifier__n_estimators": 463,
+    "classifier__scale_pos_weight": 15.939147719134237,
+    "classifier__subsample": 0.836965827544817
   },
-  "1": {
-    "precision": 0.16098081023454158,
-    "recall": 0.8162162162162162,
-    "f1-score": 0.26892252894033836,
-    "support": 185.0
+  "cv_pr_auc": 0.2553462962532794,
+  "classification_report": {
+    "0": {
+      "precision": 0.9799126637554585,
+      "recall": 0.774060020696792,
+      "f1-score": 0.8649065330506841,
+      "support": 2899.0
+    },
+    "1": {
+      "precision": 0.17506297229219145,
+      "recall": 0.7513513513513513,
+      "f1-score": 0.2839632277834525,
+      "support": 185.0
+    },
+    "accuracy": 0.772697795071336,
+    "macro avg": {
+      "precision": 0.577487818023825,
+      "recall": 0.7627056860240717,
+      "f1-score": 0.5744348804170682,
+      "support": 3084.0
+    },
+    "weighted avg": {
+      "precision": 0.9316321213038682,
+      "recall": 0.772697795071336,
+      "f1-score": 0.8300574696672736,
+      "support": 3084.0
+    }
   },
-  "accuracy": 0.73378728923476,
-  "macro avg": {
-    "precision": 0.5725686902990043,
-    "recall": 0.7723716472595397,
-    "f1-score": 0.5530935736872158,
-    "support": 3084.0
-  },
-  "weighted avg": {
-    "precision": 0.9347767014841377,
-    "recall": 0.73378728923476,
-    "f1-score": 0.803171464557198,
-    "support": 3084.0
-  }
+  "roc_auc": 0.8481004633471001,
+  "pr_auc": 0.26148835913208396
 }

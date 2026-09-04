@@ -24,7 +24,7 @@ class Thresholds:
 
     # Below this fraud score, and with clear policy coverage, auto-approve
     # is allowed without LLM deliberation.
-    fraud_auto_approve_ceiling: float = 0.20
+    fraud_auto_approve_ceiling: float = 0.30
 
     # Claim amounts above this always route through the LLM reasoning step
     # (and likely escalation) rather than the fast-path rules.

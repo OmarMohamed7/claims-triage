@@ -6,34 +6,43 @@ routing each claim to an automated decision or a human reviewer.
 
 ## Architecture
 
-```
-                    ┌─────────────────────┐
-                    │   Manager/Planner    │
-                    │   (Adjudication)     │
-                    └──────────┬───────────┘
-                               │ orchestrates
-        ┌──────────┬──────────┼──────────┬──────────┐
-        ▼          ▼          ▼          ▼          ▼
-    ┌───────┐  ┌────────┐ ┌────────┐ ┌────────┐ ┌──────────┐
-    │Intake │  │ Policy │ │ Fraud  │ │Decision│ │  Human   │
-    │ Agent │  │Retrieval│ │  Risk  │ │ Logic  │ │Escalation│
-    └───────┘  │ (RAG)  │ │(sklearn│ └────────┘ └──────────┘
-               └────────┘ │/xgboost)│
-                          └────────┘
+```mermaid
+flowchart TD
+    Submission(["Claim submission"]) --> Intake
+
+    Intake["Intake Agent"] --> FraudRisk
+
+    FraudRisk["Fraud Risk Agent"] --> PolicyRetrieval
+
+    PolicyRetrieval["Policy Retrieval Agent"] --> Adjudication
+
+    Adjudication["Manager/Planner
+    (Adjudication Agent)"] --> StatusCheck
+
+    StatusCheck{"Escalated or
+    pending review?"}
+    StatusCheck -->|yes| HumanEsc
+    StatusCheck -->|no| End(["END"])
+
+    HumanEsc["Human Escalation Agent"] --> End
 ```
 
 - **Intake Agent** — parses a raw claim submission (form text, email body, PDF
   dump) into a structured `ExtractedClaim`.
+- **Fraud Risk Agent** — a classical ML classifier (scikit-learn / XGBoost),
+  not an LLM call, that scores fraud risk from claim features. Runs before
+  Policy Retrieval since it's a fast local call with no external dependency.
 - **Policy Retrieval Agent (RAG)** — retrieves relevant policy clauses (Qdrant +
   BM25 hybrid search) to determine coverage, deductible, and exclusions.
-- **Fraud Risk Agent** — a classical ML classifier (scikit-learn / XGBoost),
-  not an LLM call, that scores fraud risk from claim and policy features.
-- **Manager/Planner (Adjudication)** — orchestrates the pipeline and combines
-  extraction confidence, policy coverage, and fraud risk into a decision:
-  approve, deny, or escalate.
+- **Manager/Planner (Adjudication)** — combines extraction confidence, policy
+  coverage, and fraud risk into a decision: approve, deny, or escalate.
 - **Human Escalation Agent** — assembles an audit-ready packet for a human
   reviewer when confidence is low, coverage is ambiguous, fraud risk is high,
   or the claim value is large.
+
+A LangGraph `StateGraph` (`src/graph.py`) orchestrates the sequence above over
+a shared `PipelineState`; each agent is an independent, individually testable
+function rather than something the Adjudication Agent calls directly.
 
 All agents communicate through shared Pydantic schemas defined in
 [`src/schemas.py`](src/schemas.py), threaded through a single `PipelineState`

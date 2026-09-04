@@ -13,12 +13,7 @@ flowchart TD
 
     Intake["Intake Agent
     extract_claim(submission)"]
-    Intake -->|ExtractedClaim| ConfCheck
-
-    ConfCheck{"extraction_confidence
-    < min_extraction_confidence?"}
-    ConfCheck -->|yes| HumanEsc
-    ConfCheck -->|no| FraudRisk
+    Intake -->|ExtractedClaim| FraudRisk
 
     FraudRisk["Fraud Risk Agent
     score_fraud_risk(claim)"]
@@ -152,7 +147,7 @@ outputs of Phases 2–5.
 **File:** `src/graph.py`
 
 Wires Phases 2–6 into a LangGraph `StateGraph` over `PipelineState`:
-`intake → (low confidence? → human_escalation) → policy_retrieval + fraud_risk → adjudication → (escalated? → human_escalation) → END`.
+`intake → fraud_risk → policy_retrieval → adjudication → (escalated? → human_escalation) → END`.
 Exposes `build_pipeline()`.
 
 **Depends on:** Phases 2–6 all implemented.

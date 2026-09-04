@@ -6,7 +6,15 @@ from pydantic import ValidationError
 
 from src.config import config
 from src.llm import LLMProvider, get_llm
-from src.schemas import AdjudicationDecision, DecisionStatus, EscalationReason, ExtractedClaim, FraudRiskResult, LLMAdjudicationResult, PolicyRetrievalResult
+from src.schemas import (
+    AdjudicationDecision,
+    DecisionStatus,
+    EscalationReason,
+    ExtractedClaim,
+    FraudRiskResult,
+    LLMAdjudicationResult,
+    PolicyRetrievalResult,
+)
 
 MAX_ADJUDICATION_RETRIES = 2
 
@@ -123,7 +131,10 @@ def apply_rule(
             submission_id= claim.submission_id,
             status= DecisionStatus.ESCALATED,
             reasoning= "".join(reasons),
-            escalation_reasons=escalation_reasons,
+            # dict.fromkeys dedupes while preserving order -- multiple rules
+            # (e.g. low retrieval confidence and is_covered=False/None) can
+            # map to the same EscalationReason.
+            escalation_reasons=list(dict.fromkeys(escalation_reasons)),
         )
         
     # Auto-approve rules
@@ -219,7 +230,9 @@ def adjudicate_with_llm(
         - approved_amount must be based only on the provided claimed amount,
         deductible, and coverage limit.
         - Always provide clear human-readable reasoning.
-        - Include specific escalation_reasons when escalating.
+        - When escalating, escalation_reasons must contain only values from
+        this exact set (do not invent new ones):
+        {", ".join(r.value for r in EscalationReason)}
 
         Respond with a single valid JSON object, matching exactly this
         shape, and nothing else (no Markdown, no code fences, no

@@ -31,7 +31,10 @@ _FIELD_DESCRIPTIONS = {
     "claimed_amount": "dollar amount being claimed, a number greater than 0",
     "incident_location": "where the incident occurred (optional)",
     "incident_description": "narrative description of what happened",
-    "other_parties_involved": "true or false — were other parties involved",
+    "other_parties_involved": (
+        "true or false — were other parties involved. If not mentioned, "
+        "use false (never null)."
+    ),
 }
 # reported_date isn't in raw_text — it's when the submission arrived, which
 # we already know (submission.submitted_at). Not asked of the LLM.
@@ -55,6 +58,14 @@ def extract_claim(submission: ClaimSubmission) -> ExtractedClaim:
             data = json.loads(response_text)
             data["submission_id"] = submission.submission_id
             data["reported_date"] = submission.submitted_at.date().isoformat()
+            if data.get("other_parties_involved") is None:
+                # ExtractedClaim.other_parties_involved is a required bool
+                # (default False), not Optional -- the LLM sometimes
+                # returns null for it on ambiguous input despite the
+                # prompt's instruction not to. Fall back to the schema's
+                # own default rather than failing extraction over one
+                # low-stakes field.
+                data["other_parties_involved"] = False
             if submission.policy_number is not None:
                 data["policy_number"] = submission.policy_number
                 if isinstance(data.get("missing_fields"), list):
