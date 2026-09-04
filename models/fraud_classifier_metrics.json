@@ -1,4 +1,5 @@
 {
+  "model_version": "fraud_classifier_v1",
   "best_params": {
     "classifier__colsample_bytree": 0.8447411578889518,
     "classifier__gamma": 0.6974693032602092,

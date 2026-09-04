@@ -31,6 +31,8 @@ import joblib
 import json
 from sklearn.impute import SimpleImputer
 
+from src.agents.fraud_risk import MODEL_VERSION
+
 
 # load the data from the csv file
 def load_data() -> tuple[pd.DataFrame, pd.Series]:
@@ -192,6 +194,7 @@ def main():
     y_proba = y_proba_all[:, 1]  # type: ignore
 
     metrices: dict[str, Any] = {
+        "model_version": MODEL_VERSION,
         "best_params": search.best_params_, # type: ignore
         "cv_pr_auc": search.best_score_, # type: ignore
         "classification_report": metrics,
