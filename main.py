@@ -3,12 +3,16 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Awaitable, Callable
 from uuid import uuid4
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi_swagger_ui_theme import setup_swagger_ui_theme
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from src.config import config
 from src.graph import build_pipeline
@@ -23,8 +27,22 @@ CSV_HEADER = [
 ]
 
 
+limiter = Limiter(key_func=get_remote_address)
+
+
+def check_artifacts() -> None:
+    missing = []
+    if not Path(config.models.fraud_model_path).is_file():
+        missing.append("fraud model (run: uv run python -m scripts.train_fraud_model)")
+    if not Path(config.paths.qdrant_path).is_dir():
+        missing.append("policy index (run: uv run python -m scripts.build_policy_index)")
+    if missing:
+        raise RuntimeError("Missing artifacts: " + "; ".join(missing))
+
+
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
+    check_artifacts()
     app.state.pipeline = build_pipeline()
     print(f"Hello from Claims Triage \nApp Version: {config.VERSION}\n")
     yield
@@ -32,6 +50,8 @@ async def app_lifespan(app: FastAPI):
 
 
 app = FastAPI(docs_url=None, lifespan=app_lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 setup_swagger_ui_theme(app=app, docs_path="/docs")
 
@@ -71,13 +91,14 @@ def health():
 
 
 @app.post("/claims", response_model=PipelineState)
-def submit_claim(request: ClaimRequest, req: Request):
+@limiter.limit(config.api.rate_limit)
+def submit_claim(request: Request, body: ClaimRequest):
     submission = ClaimSubmission(
         submission_id=uuid4().hex,
-        raw_text=request.raw_text,
-        policy_number=request.policy_number,
+        raw_text=body.raw_text,
+        policy_number=body.policy_number,
     )
-    result = req.app.state.pipeline.invoke(PipelineState(submission=submission))
+    result = request.app.state.pipeline.invoke(PipelineState(submission=submission))
     return PipelineState(**result)
 
 

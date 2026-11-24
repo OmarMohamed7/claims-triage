@@ -12,12 +12,11 @@ import pickle
 import re
 from typing import Any
 
-# from langchain_ollama import OllamaEmbeddings
-from langchain_ollama import OllamaEmbeddings
 from numpy import float64
 from qdrant_client import QdrantClient
 
 from src.config import config
+from src.embeddings import embed_query
 from src.schemas import ExtractedClaim, PolicyClause, PolicyRetrievalResult
 from src.text_utils import GENERIC_STOPWORDS, load_domain_stopwords
 from rank_bm25 import BM25Okapi
@@ -139,10 +138,6 @@ def retrieve_policy(claim: ExtractedClaim) -> PolicyRetrievalResult:
         exclusions_matched=[c.text_excerpt for c in exclusion_clauses],
         retrieval_confidence=retrieval_confidence,
     )
-
-def embed_query(query: str) -> list[float]:
-    return OllamaEmbeddings(model=config.models.embedding_model).embed_query(query)
-    
 
 def search_qdrant(embeddings: list[float], qdrant_client: QdrantClient, top_k: int = 5) -> list[PolicyClause]:
     '''

@@ -14,7 +14,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from langchain_ollama import OllamaEmbeddings
 from pypdf import PdfReader
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
@@ -22,6 +21,7 @@ from rank_bm25 import BM25Okapi
 
 from scripts.chunk.chunk import PolicyChunk, RecursiveChunker, StructureAwareChunker
 from src.config import config
+from src.embeddings import embed_documents
 from src.text_utils import GENERIC_STOPWORDS, derive_domain_stopwords, save_domain_stopwords
 
 POLICIES_PATH = "data/policy_docs/"
@@ -108,10 +108,8 @@ def load_and_chunk_docs() -> list[PolicyChunk]:
 
 
 def build_index(chunks: list[PolicyChunk]) -> None:
-    embedding_model = OllamaEmbeddings(model=config.models.embedding_model)
-
     texts = [chunk.text for chunk in chunks]
-    embeddings = embedding_model.embed_documents(texts)
+    embeddings = embed_documents(texts)
 
     domain_stopwords = derive_domain_stopwords(texts)
     stopwords = GENERIC_STOPWORDS | domain_stopwords

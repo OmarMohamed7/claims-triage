@@ -130,10 +130,21 @@ the `Thresholds` dataclass in `src/config.py`.
 
 ## Running
 
+Both the API (`:8000`) and the Streamlit UI (`:8501`) with one command:
+
 ```bash
-uv run main.py
-uv run python -m scripts.demo_scenarios
+docker compose up --build
 ```
+
+or without Docker:
+
+```bash
+uv sync --group frontend
+./scripts/dev.sh
+```
+
+Open http://localhost:8501 for the UI and http://localhost:8000/docs for the
+API. Use `API_PORT` / `UI_PORT` to change the published ports.
 
 ## Testing
 

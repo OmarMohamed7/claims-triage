@@ -1,0 +1,11 @@
+.venv
+.git
+.env
+.claude
+.vscode
+.mypy_cache
+.pytest_cache
+__pycache__
+notebooks
+usage.csv
+*.png

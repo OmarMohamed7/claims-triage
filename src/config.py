@@ -46,10 +46,14 @@ class ModelConfig:
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
     llm_model: str = os.getenv("LLM_MODEL", "llama3.2:3b")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    groq_api_key: str = os.getenv("GROQ_API_KEY", "")
     fraud_model_path: str = os.getenv(
         "FRAUD_MODEL_PATH", "models/fraud_classifier.joblib"
     )
-    embedding_model: str = os.getenv("EMBEDDING_MODEL", "all-minilm")
+    embedding_model: str = os.getenv(
+        "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
+    )
 
 
 @dataclass
@@ -63,8 +67,14 @@ class PathConfig:
 
 
 @dataclass
+class ApiConfig:
+    rate_limit: str = os.getenv("RATE_LIMIT", "10/minute")
+
+
+@dataclass
 class Config:
     thresholds: Thresholds = field(default_factory=Thresholds)
+    api: ApiConfig = field(default_factory=ApiConfig)
     models: ModelConfig = field(default_factory=ModelConfig)
     paths: PathConfig = field(default_factory=PathConfig)
     

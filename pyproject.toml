@@ -10,15 +10,16 @@ dependencies = [
     "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",
     "fastapi[standard]",
+    "slowapi>=0.1.9",
 
     # Orchestration
     "langgraph>=1.2.7",
     "langchain>=1.3.11",
-    "langchain_ollama>=1.1.0",
 
     # Policy Retrieval Agent (RAG)
     "qdrant-client>=1.12.0",
     "rank-bm25>=0.2.2",
+    "fastembed>=0.7.0",
 
     # Fraud Risk Agent (classical ML)
     "scikit-learn>=1.9.0",
@@ -43,3 +44,4 @@ dependencies = [
 [dependency-groups]
 # Dev / test
 dev = ["pytest>=9.1.1"]
+frontend = ["streamlit>=1.40.0"]
