@@ -219,3 +219,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 usage.csv
+data/eval/last_run.json
+data/eval/ragas_last_run.json

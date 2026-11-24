@@ -1,0 +1,194 @@
+[
+  {
+    "id": "auto_collision-1",
+    "claim_type": "auto_collision",
+    "description": "My car hit a guardrail on the highway and the front bumper and hood are crushed.",
+    "expected_document": "POLICY-AUTO-COLLISION-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_collision-2",
+    "claim_type": "auto_collision",
+    "description": "I rear-ended another car at a stoplight and my radiator is damaged.",
+    "expected_document": "POLICY-AUTO-COLLISION-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_collision-3",
+    "claim_type": "auto_collision",
+    "description": "My car was damaged while I was driving for a food delivery app with no commercial rider.",
+    "expected_document": "POLICY-AUTO-COLLISION-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "auto_theft-1",
+    "claim_type": "auto_theft",
+    "description": "My car was stolen from the parking lot overnight and police report was filed.",
+    "expected_document": "POLICY-AUTO-THEFT-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_theft-2",
+    "claim_type": "auto_theft",
+    "description": "Someone broke my window and damaged the ignition trying to steal my vehicle.",
+    "expected_document": "POLICY-AUTO-THEFT-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_theft-3",
+    "claim_type": "auto_theft",
+    "description": "I left the keys in the ignition with the engine running outside a store and the car was taken.",
+    "expected_document": "POLICY-AUTO-THEFT-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "auto_comprehensive-1",
+    "claim_type": "auto_comprehensive",
+    "description": "A hailstorm dented the roof and hood of my car.",
+    "expected_document": "POLICY-AUTO-COMPREHENSIVE-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_comprehensive-2",
+    "claim_type": "auto_comprehensive",
+    "description": "I hit a deer on a country road and the car has body damage.",
+    "expected_document": "POLICY-AUTO-COMPREHENSIVE-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "auto_comprehensive-3",
+    "claim_type": "auto_comprehensive",
+    "description": "My car has rust and corrosion on the undercarriage from years of wear.",
+    "expected_document": "POLICY-AUTO-COMPREHENSIVE-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "property_fire-1",
+    "claim_type": "property_fire",
+    "description": "A kitchen fire damaged the cabinets, ceiling and smoke spread through the house.",
+    "expected_document": "POLICY-PROPERTY-FIRE-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_fire-2",
+    "claim_type": "property_fire",
+    "description": "Lightning caused a fire in my detached garage and the roof burned.",
+    "expected_document": "POLICY-PROPERTY-FIRE-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_fire-3",
+    "claim_type": "property_fire",
+    "description": "The house had been vacant for over three months with no vacancy permit before a fire started.",
+    "expected_document": "POLICY-PROPERTY-FIRE-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "property_theft-1",
+    "claim_type": "property_theft",
+    "description": "Burglars broke the back door and stole my laptop and television.",
+    "expected_document": "POLICY-PROPERTY-THEFT-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_theft-2",
+    "claim_type": "property_theft",
+    "description": "My bag and camera were stolen from my parked car while traveling.",
+    "expected_document": "POLICY-PROPERTY-THEFT-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_theft-3",
+    "claim_type": "property_theft",
+    "description": "My live-in caretaker took my jewelry and cash from the bedroom.",
+    "expected_document": "POLICY-PROPERTY-THEFT-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "property_water-1",
+    "claim_type": "property_water",
+    "description": "A pipe burst under the kitchen sink and flooded the floor and cabinets.",
+    "expected_document": "POLICY-PROPERTY-WATER-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_water-2",
+    "claim_type": "property_water",
+    "description": "The water heater failed and water damaged the basement drywall.",
+    "expected_document": "POLICY-PROPERTY-WATER-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "property_water-3",
+    "claim_type": "property_water",
+    "description": "A slow leak behind the wall went unnoticed for several weeks and caused mold.",
+    "expected_document": "POLICY-PROPERTY-WATER-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "liability-1",
+    "claim_type": "liability",
+    "description": "A guest slipped on my icy front steps and broke their wrist.",
+    "expected_document": "POLICY-LIABILITY-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "liability-2",
+    "claim_type": "liability",
+    "description": "My car hit a parked vehicle and I am responsible for repairing the other owner's car.",
+    "expected_document": "POLICY-LIABILITY-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": true
+  },
+  {
+    "id": "liability-3",
+    "claim_type": "liability",
+    "description": "A client is suing me over a mistake in my consulting business work.",
+    "expected_document": "POLICY-LIABILITY-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "other-1",
+    "claim_type": "other",
+    "description": "A claim describes an unusual loss that does not match any standard coverage category.",
+    "expected_document": "POLICY-OTHER-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": null
+  },
+  {
+    "id": "other-2",
+    "claim_type": "other",
+    "description": "Unexplained loss with no supporting detail about what happened.",
+    "expected_document": "POLICY-OTHER-01",
+    "expected_section": "Exclusions",
+    "expected_is_covered": false
+  },
+  {
+    "id": "other-3",
+    "claim_type": "other",
+    "description": "The claim involves several coverage types at once and the loss type is unclear.",
+    "expected_document": "POLICY-OTHER-01",
+    "expected_section": "Coverage",
+    "expected_is_covered": null
+  }
+]

@@ -146,6 +146,23 @@ uv sync --group frontend
 Open http://localhost:8501 for the UI and http://localhost:8000/docs for the
 API. Use `API_PORT` / `UI_PORT` to change the published ports.
 
+## Evaluation
+
+```bash
+uv sync --group dev
+uv run python -m scripts.eval_retrieval
+uv run python -m scripts.eval_ragas --limit 3
+```
+
+- `eval_retrieval` is deterministic and free. It scores policy retrieval against
+  the labelled cases in `data/eval/retrieval_cases.json` (document and clause
+  hit@1, context precision and recall, MRR, coverage accuracy).
+- `eval_ragas` uses [RAGAS](https://docs.ragas.io/) with the configured LLM as
+  judge, over the same cases: faithfulness and answer relevancy of the
+  Adjudication reasoning, and context precision and recall of the retrieved
+  clauses. It makes about 12 LLM calls per case, throttled to `--rpm` (default
+  12) for free-tier limits, so the full set takes roughly 25 minutes.
+
 ## Testing
 
 ```bash

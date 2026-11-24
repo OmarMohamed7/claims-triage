@@ -81,7 +81,7 @@ def retrieve_policy(claim: ExtractedClaim) -> PolicyRetrievalResult:
 
     claim_type = claim.claim_type.value.replace("_", " ") if claim.claim_type is not None else ""
 
-    query = f"${claim_type} {claim.incident_description}"
+    query = f"{claim_type} {claim.incident_description}"
     embedded_query = embed_query(query = query)
 
     qdrant_client, bm25, docstore, _, stopwords = load_index()
