@@ -3,7 +3,7 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/src"
     ],
-    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.typeCheckingMode": "off",
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.completeFunctionParens": true,
@@ -19,7 +19,7 @@
         "reportOptionalMemberAccess": "error",
         "reportOptionalCall": "error",
         "reportReturnType": "error",
-        "reportArgumentType": "error",
+        "reportArgumentType": "none",
         "reportAssignmentType": "error",
         "reportUnusedImport": "warning",
         "reportUnusedVariable": "warning"

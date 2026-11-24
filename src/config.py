@@ -67,6 +67,8 @@ class Config:
     thresholds: Thresholds = field(default_factory=Thresholds)
     models: ModelConfig = field(default_factory=ModelConfig)
     paths: PathConfig = field(default_factory=PathConfig)
+    
+    VERSION = "1.0.0"
 
 
 config = Config()

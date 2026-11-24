@@ -9,9 +9,10 @@ schema change is a one-file diff instead of a hunt through five agents.
 
 from __future__ import annotations
 
+import operator
 from datetime import date, datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -46,6 +47,12 @@ class EscalationReason(str, Enum):
     CONFLICTING_SIGNALS = "conflicting_signals"
     MANUAL_REVIEW_REQUESTED = "manual_review_requested"
     INSUFFICIENT_FRAUD_DATA = "insufficient_fraud_data"
+    PROCESSING_ERROR = "processing_error"
+
+
+class EscalationQueue(str, Enum):
+    FRAUD_REVIEW = "fraud_review"
+    ADJUDICATOR = "adjudicator"
 
 
 # ---------------------------------------------------------------------------
@@ -61,6 +68,11 @@ class ClaimSubmission(BaseModel):
     policy_number: Optional[str] = None
     submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     attachment_paths: list[str] = Field(default_factory=list)
+
+
+class ClaimRequest(BaseModel):
+    raw_text: str
+    policy_number: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -196,11 +208,12 @@ class EscalationPacket(BaseModel):
     """Everything a human reviewer needs, assembled from every prior agent."""
 
     submission_id: str
-    extracted_claim: ExtractedClaim
-    policy_result: PolicyRetrievalResult
-    fraud_result: FraudRiskResult
+    extracted_claim: Optional[ExtractedClaim] = None
+    policy_result: Optional[PolicyRetrievalResult] = None
+    fraud_result: Optional[FraudRiskResult] = None
     planner_reasoning: str
     escalation_reasons: list[EscalationReason]
+    queue: EscalationQueue = EscalationQueue.ADJUDICATOR
     status: DecisionStatus = DecisionStatus.PENDING_HUMAN_REVIEW
 
 
@@ -228,4 +241,4 @@ class PipelineState(BaseModel):
     decision: Optional[AdjudicationDecision] = None
     escalation_packet: Optional[EscalationPacket] = None
     human_outcome: Optional[HumanReviewOutcome] = None
-    errors: list[str] = Field(default_factory=list)
+    errors: Annotated[list[str], operator.add] = Field(default_factory=list)

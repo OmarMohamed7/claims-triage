@@ -1,59 +1,72 @@
 # Claims Triage
 
 A multi-agent pipeline for triaging insurance claims: extracting structured
-data from raw submissions, checking policy coverage, scoring fraud risk, and
+data from raw submissions, scoring fraud risk, checking policy coverage, and
 routing each claim to an automated decision or a human reviewer.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    Submission(["Claim submission"]) --> Intake
+    Submission(["Claim submission"]) --> Intake["Intake Agent"]
 
-    Intake["Intake Agent"] --> FraudRisk
+    Intake -->|"error or low confidence"| HumanEsc
+    Intake --> FraudRisk["Fraud Risk Agent"]
+    Intake --> PolicyRetrieval["Policy Retrieval Agent"]
 
-    FraudRisk["Fraud Risk Agent"] --> PolicyRetrieval
+    FraudRisk --> Join(("join"))
+    PolicyRetrieval --> Join
 
-    PolicyRetrieval["Policy Retrieval Agent"] --> Adjudication
+    Join -->|"error"| HumanEsc
+    Join --> Adjudication["Adjudication Agent
+    (rules first, LLM fallback)"]
 
-    Adjudication["Manager/Planner
-    (Adjudication Agent)"] --> StatusCheck
-
-    StatusCheck{"Escalated or
+    Adjudication --> StatusCheck{"Escalated or
     pending review?"}
-    StatusCheck -->|yes| HumanEsc
+    StatusCheck -->|yes| HumanEsc["Human Escalation Agent"]
     StatusCheck -->|no| End(["END"])
 
-    HumanEsc["Human Escalation Agent"] --> End
+    HumanEsc --> End
 ```
 
+- Fraud Risk and Policy Retrieval run in parallel; both only need the
+  extracted claim.
+- If Intake fails or its confidence is below the minimum, the claim goes
+  straight to Human Escalation, since fraud and policy results on unreliable
+  fields would be meaningless.
+- High fraud risk never skips ahead or auto-denies. It is an input to
+  Adjudication, which escalates the claim.
+- A failure in any step produces an escalation packet with reason
+  `processing_error` instead of dropping the claim.
+- Each packet carries a `queue`: `fraud_review` when the reasons include
+  high fraud risk, otherwise `adjudicator`.
+
 - **Intake Agent** — parses a raw claim submission (form text, email body, PDF
-  dump) into a structured `ExtractedClaim`.
-- **Fraud Risk Agent** — a classical ML classifier (scikit-learn / XGBoost),
-  not an LLM call, that scores fraud risk from claim features. Runs before
-  Policy Retrieval since it's a fast local call with no external dependency.
-- **Policy Retrieval Agent (RAG)** — retrieves relevant policy clauses (Qdrant +
-  BM25 hybrid search) to determine coverage, deductible, and exclusions.
-- **Manager/Planner (Adjudication)** — combines extraction confidence, policy
-  coverage, and fraud risk into a decision: approve, deny, or escalate.
+  dump) into a structured `ExtractedClaim` using the LLM.
+- **Fraud Risk Agent** — an XGBoost classifier (no LLM) that scores fraud risk
+  from claim features and buckets it into `low` / `medium` / `high`.
+- **Policy Retrieval Agent (RAG)** — hybrid Qdrant + BM25 search over policy
+  clauses; coverage, deductible, and limits are parsed from the retrieved text
+  with regex (no LLM).
+- **Adjudication Agent** — applies deterministic rules first: auto-approve
+  (low fraud, confident extraction and retrieval) or auto-escalate (high fraud,
+  high-value claim, low confidence). Ambiguous cases fall back to the LLM.
 - **Human Escalation Agent** — assembles an audit-ready packet for a human
-  reviewer when confidence is low, coverage is ambiguous, fraud risk is high,
-  or the claim value is large.
+  reviewer with the claim, policy result, fraud result, and decision.
 
 A LangGraph `StateGraph` (`src/graph.py`) orchestrates the sequence above over
 a shared `PipelineState`; each agent is an independent, individually testable
-function rather than something the Adjudication Agent calls directly.
+function.
 
 All agents communicate through shared Pydantic schemas defined in
-[`src/schemas.py`](src/schemas.py), threaded through a single `PipelineState`
-object as the pipeline runs.
+[`src/schemas.py`](src/schemas.py).
 
 ## Tech stack
 
-- **Orchestration**: [LangGraph](https://github.com/langchain-ai/langgraph) /
-  LangChain, [Anthropic](https://www.anthropic.com/) (Claude) as the LLM
-  provider
-- **Policy retrieval**: Qdrant (embedded/local mode), BM25 (`rank-bm25`), `sentence-transformers`
+- **Orchestration**: [LangGraph](https://github.com/langchain-ai/langgraph)
+- **LLM and embeddings**: local [Ollama](https://ollama.com/) (`llama3.2:3b`,
+  `all-minilm`), behind a provider abstraction in `src/llm.py`
+- **Policy retrieval**: Qdrant (embedded/local mode), BM25 (`rank-bm25`)
 - **Fraud risk**: scikit-learn, XGBoost, pandas, numpy
 - **Schemas / config**: Pydantic, `python-dotenv`
 - **Package management**: [uv](https://docs.astral.sh/uv/)
@@ -62,59 +75,68 @@ object as the pipeline runs.
 
 ```
 src/
-  config.py    # Central config: decision thresholds, model/provider config, paths
-  schemas.py   # Shared Pydantic data contracts for every agent in the pipeline
+  agents/      # intake, fraud_risk, policy_retrieval, adjudication, human_escalation
+  config.py    # Decision thresholds, model/provider config, paths
+  graph.py     # LangGraph pipeline
+  llm.py       # LLM provider abstraction
+  schemas.py   # Shared Pydantic data contracts
+scripts/
+  train_fraud_model.py   # Trains models/fraud_classifier.joblib
+  build_policy_index.py  # Builds data/qdrant/ (Qdrant + BM25 + docstore)
+  demo_scenarios.py      # Runs the pipeline over multiple scenarios
 tests/
-  test_schemas.py
 data/
   raw/claims.csv     # Sample claims dataset
-  policy_docs/        # Policy documents for the retrieval agent to index
-notebooks/             # Exploration notebooks
+  policy_docs/       # Policy documents indexed for retrieval
 main.py
 ```
 
 ## Setup
 
-Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.14+, [uv](https://docs.astral.sh/uv/), and
+[Ollama](https://ollama.com/).
 
 ```bash
 uv sync
 cp .env.example .env
-# then fill in ANTHROPIC_API_KEY in .env
+ollama pull llama3.2:3b
+ollama pull all-minilm
 ```
+
+Build the two local artifacts the pipeline needs, from the project root:
+
+```bash
+uv run python -m scripts.train_fraud_model
+uv run python -m scripts.build_policy_index
+```
+
+`ollama serve` must be running for Intake, Adjudication, and Policy Retrieval.
 
 ### Configuration
 
-Runtime config live in `src/config.py` and are overridable via environment
+Runtime config lives in `src/config.py` and is overridable via environment
 variables (see `.env.example`):
 
-| Variable                                                                                     | Purpose                                                       |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `LLM_PROVIDER` / `LLM_MODEL`                                                                 | LLM used by Intake, Policy synthesis, and Adjudication agents |
-| `ANTHROPIC_API_KEY`                                                                          | API key for the LLM provider                                  |
-| `EMBEDDING_MODEL`                                                                            | Embedding model for policy document retrieval                 |
-| `DATA_DIR`, `POLICY_DOCS_DIR`, `QDRANT_PATH`, `QDRANT_COLLECTION_NAME`, `RAW_CLAIMS_DATASET` | Data paths                                                    |
-| `FRAUD_MODEL_PATH`                                                                           | Path to the trained fraud classifier                          |
+| Variable                                                                                     | Purpose                                      |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `LLM_PROVIDER` / `LLM_MODEL` / `OLLAMA_BASE_URL`                                             | LLM used by the Intake and Adjudication agents |
+| `EMBEDDING_MODEL`                                                                            | Embedding model for policy document retrieval |
+| `DATA_DIR`, `POLICY_DOCS_DIR`, `QDRANT_PATH`, `QDRANT_COLLECTION_NAME`, `RAW_CLAIMS_DATASET` | Data paths                                   |
+| `FRAUD_MODEL_PATH`                                                                           | Path to the trained fraud classifier         |
 
-Decision boundaries (fraud auto-escalate threshold, high-value claim cutoff,
-minimum extraction/retrieval confidence, etc.) are defined in the
-`Thresholds` dataclass in `src/config.py`.
+Decision boundaries (fraud auto-escalate threshold, auto-approve ceiling,
+high-value claim cutoff, minimum extraction/retrieval confidence) are defined in
+the `Thresholds` dataclass in `src/config.py`.
 
 ## Running
 
 ```bash
 uv run main.py
+uv run python -m scripts.demo_scenarios
 ```
 
 ## Testing
 
 ```bash
-uv run pytest
+uv run python -m pytest
 ```
-
-## Status
-
-Early stage. The shared schemas (`src/schemas.py`) and config layer
-(`src/config.py`) that every agent will build on are in place; the individual
-agents and the LangGraph pipeline that wires them together are not yet
-implemented.

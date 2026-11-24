@@ -1,34 +1,85 @@
+import csv
+import logging
+import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Awaitable, Callable
+from uuid import uuid4
+
+import uvicorn
+from fastapi import FastAPI, Request, Response
+from fastapi_swagger_ui_theme import setup_swagger_ui_theme
+
+from src.config import config
 from src.graph import build_pipeline
-from src.schemas import ClaimSubmission, PipelineState
+from src.schemas import ClaimRequest, ClaimSubmission, PipelineState
+
+logging.basicConfig(level=logging.INFO)
+
+USAGE_LOG = "usage.csv"
+CSV_HEADER = [
+    "Request ID", "Datetime", "Endpoint Triggered", "Client IP Address",
+    "Response Time", "Status Code", "Successful",
+]
 
 
-def main():
+@asynccontextmanager
+async def app_lifespan(app: FastAPI):
+    app.state.pipeline = build_pipeline()
+    print(f"Hello from Claims Triage \nApp Version: {config.VERSION}\n")
+    yield
+    del app.state.pipeline
+
+
+app = FastAPI(docs_url=None, lifespan=app_lifespan)
+
+setup_swagger_ui_theme(app=app, docs_path="/docs")
+
+
+@app.middleware("http")
+async def monitor_service(
+    req: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    req_id = uuid4().hex
+    request_datetime = datetime.now(timezone.utc).isoformat()
+    start_time = time.perf_counter()
+    response = await call_next(req)
+    response_time = round(time.perf_counter() - start_time, 4)
+    response.headers["X-Response-Time"] = str(response_time)
+    response.headers["X-API-Request-ID"] = req_id
+    with open(USAGE_LOG, "a", newline="") as file:
+        writer = csv.writer(file)
+        if file.tell() == 0:
+            writer.writerow(CSV_HEADER)
+        writer.writerow(
+            [
+                req_id,
+                request_datetime,
+                req.url,
+                req.client.host if req.client else "",
+                response_time,
+                response.status_code,
+                response.status_code < 400,
+            ]
+        )
+    return response
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "version": config.VERSION}
+
+
+@app.post("/claims", response_model=PipelineState)
+def submit_claim(request: ClaimRequest, req: Request):
     submission = ClaimSubmission(
-        submission_id="test_submission",
-        raw_text=(
-            "I was rear-ended at a red light on Main Street on 2026-08-15 "
-            "while driving my sedan. The other driver's insurance admitted "
-            "fault. Repair estimate came to $4,200. No injuries, no other "
-            "parties involved beyond the other driver."
-        ),
-        policy_number="POL-LIAB-000001",
+        submission_id=uuid4().hex,
+        raw_text=request.raw_text,
+        policy_number=request.policy_number,
     )
-
-    pipeline = build_pipeline()
-    result = pipeline.invoke(PipelineState(submission=submission)) # type: ignore
-
-    print("errors:", result.get("errors"))
-    print()
-    print("extracted_claim:", result.get("extracted_claim"))
-    print()
-    print("fraud_result:", result.get("fraud_result"))
-    print()
-    print("policy_result:", result.get("policy_result"))
-    print()
-    print("decision:", result.get("decision"))
-    print()
-    print("escalation_packet:", result.get("escalation_packet"))
+    result = req.app.state.pipeline.invoke(PipelineState(submission=submission))
+    return PipelineState(**result)
 
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
