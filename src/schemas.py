@@ -241,6 +241,13 @@ class HumanReviewOutcome(BaseModel):
     reviewed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class ReviewDecisionRequest(BaseModel):
+    reviewer_id: str = Field(default="adjudicator", max_length=64)
+    approve: bool
+    approved_amount: Optional[float] = Field(default=None, ge=0)
+    notes: str = Field(default="", max_length=2000)
+
+
 # ---------------------------------------------------------------------------
 # 7. Full pipeline state (what LangGraph threads through the graph)
 # ---------------------------------------------------------------------------

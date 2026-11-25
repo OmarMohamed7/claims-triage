@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from pathlib import Path
@@ -20,12 +21,51 @@ STATUS_COLORS = {
 st.set_page_config(page_title="Claims Triage", page_icon="🗂️", layout="wide")
 st.title("Claims Triage")
 
+if "visit_logged" not in st.session_state:
+    st.session_state.visit_logged = True
+    print(json.dumps({"event": "ui_visit", "user_agent": st.context.headers.get("User-Agent", "")}), flush=True)
+
 api_url = st.sidebar.text_input("API URL", DEFAULT_API_URL)
 if st.sidebar.button("Check API"):
     try:
         st.sidebar.success(httpx.get(f"{api_url}/health", timeout=5).json())
     except Exception as e:
         st.sidebar.error(f"Unreachable: {e}")
+
+page = st.sidebar.radio("Page", ["Submit claim", "Adjudicator queue"])
+if page == "Adjudicator queue":
+    st.header("Adjudicator queue")
+    try:
+        pending = httpx.get(f"{api_url}/reviews", timeout=10).json()
+    except Exception as e:
+        st.error(f"Could not load queue: {e}")
+        st.stop()
+    if st.button("Refresh"):
+        st.rerun()
+    if not pending:
+        st.info("No claims waiting for review.")
+    for item in pending:
+        claim = item.get("extracted_claim") or {}
+        amount = claim.get("claimed_amount")
+        label = f"{item['queue'].replace('_', ' ').title()} · {item['submission_id'][:8]}"
+        with st.expander(f"{label} · ${amount:,.2f}" if amount else label):
+            st.write(item["planner_reasoning"])
+            st.caption("Reasons: " + ", ".join(r.replace("_", " ") for r in item["escalation_reasons"]))
+            if claim:
+                st.json(claim)
+            key = item["submission_id"]
+            notes = st.text_area("Notes", key=f"notes_{key}")
+            approved_amount = st.number_input("Approved amount", min_value=0.0, value=float(amount or 0), key=f"amount_{key}")
+            approve_col, deny_col = st.columns(2)
+            for column, label_text, approve in ((approve_col, "Approve", True), (deny_col, "Deny", False)):
+                if column.button(label_text, key=f"{label_text}_{key}", type="primary" if approve else "secondary"):
+                    httpx.post(
+                        f"{api_url}/reviews/{key}/decision",
+                        json={"approve": approve, "approved_amount": approved_amount, "notes": notes},
+                        timeout=10,
+                    ).raise_for_status()
+                    st.rerun()
+    st.stop()
 
 try:
     model_info = httpx.get(f"{api_url}/models", timeout=10).json()

@@ -74,6 +74,8 @@ class PathConfig:
     policy_docs_dir: str = os.getenv("POLICY_DOCS_DIR", "data/policy_docs")
     qdrant_path: str = os.getenv("QDRANT_PATH", "data/qdrant")
     qdrant_collection_name: str = os.getenv("QDRANT_COLLECTION_NAME", "policy_clauses")
+    reviews_database_url: str = os.getenv("REVIEWS_DATABASE_URL", "")
+    reviews_db: str = os.getenv("REVIEWS_DB", "data/reviews.db")
     raw_claims_dataset: str = os.getenv("RAW_CLAIMS_DATASET", "data/raw/claims.csv")
 
 

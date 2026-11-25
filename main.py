@@ -16,7 +16,16 @@ from slowapi.util import get_remote_address
 
 from src.config import config
 from src.graph import build_pipeline
-from src.schemas import ClaimRequest, ClaimSubmission, PipelineState
+from src.review_store import ReviewStore
+from src.schemas import (
+    ClaimRequest,
+    ClaimSubmission,
+    DecisionStatus,
+    EscalationPacket,
+    HumanReviewOutcome,
+    PipelineState,
+    ReviewDecisionRequest,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -44,6 +53,7 @@ def check_artifacts() -> None:
 async def app_lifespan(app: FastAPI):
     check_artifacts()
     app.state.pipeline = build_pipeline()
+    app.state.reviews = ReviewStore(config.paths.reviews_db, config.paths.reviews_database_url)
     print(f"Hello from Claims Triage \nApp Version: {config.VERSION}\n")
     yield
     del app.state.pipeline
@@ -117,7 +127,29 @@ def submit_claim(request: Request, body: ClaimRequest):
             submission=submission, model=body.model, custom_llm=body.custom_llm
         )
     )
-    return PipelineState(**result)
+    state = PipelineState(**result)
+    if state.escalation_packet:
+        request.app.state.reviews.add(state.escalation_packet)
+    return state
+
+
+@app.get("/reviews", response_model=list[EscalationPacket])
+def list_reviews(request: Request, pending: bool = True):
+    return request.app.state.reviews.list(pending_only=pending)
+
+
+@app.post("/reviews/{submission_id}/decision", response_model=HumanReviewOutcome)
+def decide_review(request: Request, submission_id: str, body: ReviewDecisionRequest):
+    outcome = HumanReviewOutcome(
+        submission_id=submission_id,
+        reviewer_id=body.reviewer_id,
+        final_status=DecisionStatus.APPROVED if body.approve else DecisionStatus.DENIED,
+        approved_amount=body.approved_amount if body.approve else None,
+        reviewer_notes=body.notes,
+    )
+    if not request.app.state.reviews.decide(outcome):
+        raise HTTPException(status_code=404, detail="No pending review with that id")
+    return outcome
 
 
 if __name__ == "__main__":
