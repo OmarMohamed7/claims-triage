@@ -125,16 +125,19 @@ class VertexGeminiProvider(LLMProvider):
         return _gemini_text(response)
 
 
-class GroqProvider(LLMProvider):
+class OpenAICompatProvider(LLMProvider):
+    url: str
+    key_name: str
+
     def __init__(self, model: str, api_key: str):
         if not api_key:
-            raise ValueError("GROQ_API_KEY is not set")
+            raise ValueError(f"{self.key_name} is not set")
         self._model = model
         self._api_key = api_key
 
     def generate(self, prompt: str, *, temperature: float = 0.0) -> str:
         response = _post_with_retry(
-            "https://api.groq.com/openai/v1/chat/completions",
+            self.url,
             {"Authorization": f"Bearer {self._api_key}"},
             {
                 "model": self._model,
@@ -143,6 +146,16 @@ class GroqProvider(LLMProvider):
             },
         )
         return response.json()["choices"][0]["message"]["content"]
+
+
+class GroqProvider(OpenAICompatProvider):
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    key_name = "GROQ_API_KEY"
+
+
+class DeepSeekProvider(OpenAICompatProvider):
+    url = "https://api.deepseek.com/chat/completions"
+    key_name = "DEEPSEEK_API_KEY"
 
 
 _PROVIDER_FACTORIES = {
@@ -160,6 +173,9 @@ _PROVIDER_FACTORIES = {
     "groq": lambda model: GroqProvider(
         model=model, api_key=config.models.groq_api_key
     ),
+    "deepseek": lambda model: DeepSeekProvider(
+        model=model, api_key=config.models.deepseek_api_key
+    ),
 }
 
 _selected: ContextVar[str | LLMProvider | None] = ContextVar("llm_choice", default=None)
@@ -169,6 +185,8 @@ def _custom_provider(custom: CustomLLM) -> LLMProvider:
     key = custom.api_key.get_secret_value()
     if custom.provider == "gemini":
         return GeminiProvider(model=custom.model, api_key=key)
+    if custom.provider == "deepseek":
+        return DeepSeekProvider(model=custom.model, api_key=key)
     return GroqProvider(model=custom.model, api_key=key)
 
 

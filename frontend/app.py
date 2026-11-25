@@ -105,7 +105,7 @@ CUSTOM = "Custom (use my own API key)"
 model = st.sidebar.selectbox("Model", [*model_choices, CUSTOM], index=default_index)
 custom_llm = None
 if model == CUSTOM:
-    custom_provider = st.sidebar.selectbox("Provider", ["gemini", "groq"])
+    custom_provider = st.sidebar.selectbox("Provider", ["gemini", "groq", "deepseek"])
     custom_model = st.sidebar.text_input("Model name", placeholder="e.g. qwen/qwen3.8-27b")
     custom_key = st.sidebar.text_input("API key", type="password")
     st.sidebar.caption("Sent to the API for this request only. It is not stored or logged.")

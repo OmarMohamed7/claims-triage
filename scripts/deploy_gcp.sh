@@ -25,9 +25,10 @@ store_secret() {
 }
 
 deploy_api() {
-  local gemini_key groq_key llm_model reviews_url choices="" secrets
+  local gemini_key groq_key deepseek_key llm_model reviews_url choices="" secrets
   gemini_key=$(env_value GEMINI_API_KEY)
   groq_key=$(env_value GROQ_API_KEY)
+  deepseek_key=$(env_value DEEPSEEK_API_KEY)
   llm_model=$(env_value LLM_MODEL)
   llm_model=${llm_model:-qwen/qwen3.8-27b}
 
@@ -39,6 +40,14 @@ deploy_api() {
   store_secret groq-api-key "$groq_key"
   secrets="$secrets,GROQ_API_KEY=groq-api-key:latest"
   choices="gemini:gemini-3.5-flash-lite"
+
+  if [ -n "$deepseek_key" ]; then
+    store_secret deepseek-api-key "$deepseek_key"
+    secrets="$secrets,DEEPSEEK_API_KEY=deepseek-api-key:latest"
+    choices="$choices,deepseek:deepseek-chat"
+  else
+    echo "DEEPSEEK_API_KEY is empty in .env: DeepSeek will not be in the model list."
+  fi
 
   reviews_url=$(env_value REVIEWS_DATABASE_URL)
   if [ -n "$reviews_url" ]; then

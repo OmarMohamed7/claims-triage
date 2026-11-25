@@ -71,7 +71,7 @@ class ClaimSubmission(BaseModel):
 
 
 class CustomLLM(BaseModel):
-    provider: Literal["gemini", "groq"]
+    provider: Literal["gemini", "groq", "deepseek"]
     model: str = Field(..., pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$")
     api_key: SecretStr = Field(..., min_length=1)
 

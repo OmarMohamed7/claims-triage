@@ -48,6 +48,7 @@ class ModelConfig:
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
     gcp_project: str = os.getenv("GCP_PROJECT", "")
     gcp_location: str = os.getenv("GCP_LOCATION", "global")
     fraud_model_path: str = os.getenv(
