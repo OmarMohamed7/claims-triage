@@ -94,23 +94,25 @@ def _run_adjudication(state: PipelineState) -> dict:
 @_node("early_escalation")
 def _run_early_escalation(state: PipelineState) -> dict:
     if state.errors:
-        reasoning = "Processing failed: " + "; ".join(state.errors)
-        reasons = [EscalationReason.PROCESSING_ERROR]
-    else:
-        claim = _need(state.extracted_claim, "extracted_claim")
-        reasoning = (
+        return {
+            "decision": AdjudicationDecision(
+                submission_id=state.submission.submission_id,
+                status=DecisionStatus.DENIED,
+                reasoning="Processing failed: " + "; ".join(state.errors),
+            )
+        }
+
+    claim = _need(state.extracted_claim, "extracted_claim")
+    decision = AdjudicationDecision(
+        submission_id=state.submission.submission_id,
+        status=DecisionStatus.ESCALATED,
+        reasoning=(
             f"Claim extraction confidence "
             f"({claim.extraction_confidence:.2f}) is below the "
             f"minimum required confidence "
             f"({config.thresholds.min_extraction_confidence:.2f})."
-        )
-        reasons = [EscalationReason.LOW_CONFIDENCE_EXTRACTION]
-
-    decision = AdjudicationDecision(
-        submission_id=state.submission.submission_id,
-        status=DecisionStatus.ESCALATED,
-        reasoning=reasoning,
-        escalation_reasons=reasons,
+        ),
+        escalation_reasons=[EscalationReason.LOW_CONFIDENCE_EXTRACTION],
     )
     return {
         "decision": decision,

@@ -43,8 +43,8 @@ class Thresholds:
 
 @dataclass
 class ModelConfig:
-    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
-    llm_model: str = os.getenv("LLM_MODEL", "llama3.2:3b")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "groq")
+    llm_model: str = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")

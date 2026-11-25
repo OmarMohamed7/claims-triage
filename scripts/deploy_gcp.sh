@@ -29,19 +29,16 @@ deploy_api() {
   gemini_key=$(env_value GEMINI_API_KEY)
   groq_key=$(env_value GROQ_API_KEY)
   llm_model=$(env_value LLM_MODEL)
-  llm_model=${llm_model:-gemini-3.5-flash-lite}
+  llm_model=${llm_model:-qwen/qwen3.8-27b}
 
   [ -n "$gemini_key" ] || { echo "GEMINI_API_KEY is empty in .env"; exit 1; }
   store_secret gemini-api-key "$gemini_key"
   secrets="GEMINI_API_KEY=gemini-api-key:latest"
 
-  if [ -n "$groq_key" ]; then
-    store_secret groq-api-key "$groq_key"
-    secrets="$secrets,GROQ_API_KEY=groq-api-key:latest"
-    choices="groq:qwen/qwen3.8-27b"
-  else
-    echo "GROQ_API_KEY is empty in .env: Groq will not be in the model list."
-  fi
+  [ -n "$groq_key" ] || { echo "GROQ_API_KEY is empty in .env"; exit 1; }
+  store_secret groq-api-key "$groq_key"
+  secrets="$secrets,GROQ_API_KEY=groq-api-key:latest"
+  choices="gemini:gemini-3.5-flash-lite"
 
   reviews_url=$(env_value REVIEWS_DATABASE_URL)
   if [ -n "$reviews_url" ]; then
@@ -53,7 +50,7 @@ deploy_api() {
 
   gcloud run services update "$API_SERVICE" --region "$REGION" --project "$PROJECT" \
     --memory 2Gi --cpu-boost --max-instances 2 \
-    --update-env-vars "^|^LLM_PROVIDER=gemini|LLM_MODEL=$llm_model|RATE_LIMIT=10/minute|LLM_CHOICES=$choices" \
+    --update-env-vars "^|^LLM_PROVIDER=groq|LLM_MODEL=$llm_model|RATE_LIMIT=10/minute|LLM_CHOICES=$choices" \
     --update-secrets "$secrets"
 }
 

@@ -106,20 +106,19 @@ def test_low_extraction_confidence_skips_fraud_and_policy(patched):
     assert result["escalation_packet"] is not None
 
 
-def test_intake_error_escalates_instead_of_dropping(patched):
+def test_intake_error_denies_with_errors(patched):
     def boom(s):
         raise RuntimeError("bad json")
 
     patched.setattr(graph, "extract_claim", boom)
     result = _run()
     assert result["errors"] == ["intake: bad json"]
-    assert result["escalation_packet"].escalation_reasons == [
-        EscalationReason.PROCESSING_ERROR
-    ]
-    assert result["escalation_packet"].extracted_claim is None
+    assert result["decision"].status == DecisionStatus.DENIED
+    assert "bad json" in result["decision"].reasoning
+    assert result.get("escalation_packet") is None
 
 
-def test_fraud_error_escalates_after_parallel_branches(patched):
+def test_fraud_error_denies_after_parallel_branches(patched):
     def boom(c):
         raise RuntimeError("model missing")
 
@@ -127,21 +126,19 @@ def test_fraud_error_escalates_after_parallel_branches(patched):
     result = _run()
     assert result["errors"] == ["fraud_risk: model missing"]
     assert result["policy_result"] is not None
-    assert result["escalation_packet"].escalation_reasons == [
-        EscalationReason.PROCESSING_ERROR
-    ]
+    assert result["decision"].status == DecisionStatus.DENIED
+    assert result.get("escalation_packet") is None
 
 
-def test_adjudication_error_escalates(patched):
+def test_adjudication_error_denies(patched):
     def boom(c, p, f):
         raise RuntimeError("llm down")
 
     patched.setattr(graph, "adjudicate", boom)
     result = _run()
     assert result["errors"] == ["adjudication: llm down"]
-    assert result["escalation_packet"].escalation_reasons == [
-        EscalationReason.PROCESSING_ERROR
-    ]
+    assert result["decision"].status == DecisionStatus.DENIED
+    assert result.get("escalation_packet") is None
 
 
 def test_missing_input_is_recorded_not_raised(patched, caplog):
@@ -149,9 +146,8 @@ def test_missing_input_is_recorded_not_raised(patched, caplog):
     patched.setattr(graph, "retrieve_policy", lambda c: None)
     result = _run()
     assert result["errors"] == ["adjudication: missing policy_result"]
-    assert result["escalation_packet"].escalation_reasons == [
-        EscalationReason.PROCESSING_ERROR
-    ]
+    assert result["decision"].status == DecisionStatus.DENIED
+    assert result.get("escalation_packet") is None
     assert "adjudication failed for submission s1" in caplog.text
 
 
