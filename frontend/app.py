@@ -36,7 +36,9 @@ page = st.sidebar.radio("Page", ["Submit claim", "Adjudicator queue"])
 if page == "Adjudicator queue":
     st.header("Adjudicator queue")
     try:
-        pending = httpx.get(f"{api_url}/reviews", timeout=10).json()
+        response = httpx.get(f"{api_url}/reviews", timeout=10)
+        response.raise_for_status()
+        pending = response.json()
     except Exception as e:
         st.error(f"Could not load queue: {e}")
         st.stop()
