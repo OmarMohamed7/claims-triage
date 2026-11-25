@@ -112,6 +112,15 @@ if model == CUSTOM:
     if custom_model and custom_key:
         custom_llm = {"provider": custom_provider, "model": custom_model, "api_key": custom_key}
     model = None
+elif model.partition(":")[0] in ("gemini", "groq", "deepseek"):
+    key_field = f"key:{model}"
+    own_key = st.sidebar.text_input("Use my own API key for this model (optional)", type="password", key=key_field)
+    st.sidebar.button("Reset to default key", on_click=st.session_state.__setitem__, args=(key_field, ""))
+    st.sidebar.caption("Overrides the server key for your requests only. The server key is never shown.")
+    if own_key:
+        provider, _, name = model.partition(":")
+        custom_llm = {"provider": provider, "model": name, "api_key": own_key}
+        model = None
 
 sample_names = [sample["name"] for sample in SAMPLES]
 sample_name = st.selectbox("Load a sample", ["(none)", *sample_names])

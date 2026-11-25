@@ -154,7 +154,7 @@ class GroqProvider(OpenAICompatProvider):
 
 
 class DeepSeekProvider(OpenAICompatProvider):
-    url = "https://api.deepseek.com/chat/completions"
+    url = config.models.deepseek_base_url.rstrip("/") + "/chat/completions"
     key_name = "DEEPSEEK_API_KEY"
 
 

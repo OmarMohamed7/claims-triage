@@ -49,6 +49,7 @@ class ModelConfig:
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
+    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     gcp_project: str = os.getenv("GCP_PROJECT", "")
     gcp_location: str = os.getenv("GCP_LOCATION", "global")
     fraud_model_path: str = os.getenv(
