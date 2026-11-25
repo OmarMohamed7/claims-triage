@@ -25,10 +25,12 @@ store_secret() {
 }
 
 deploy_api() {
-  local gemini_key groq_key deepseek_key llm_model reviews_url choices="" secrets
+  local gemini_key groq_key deepseek_key deepseek_url deepseek_choice llm_model reviews_url choices="" secrets
   gemini_key=$(env_value GEMINI_API_KEY)
   groq_key=$(env_value GROQ_API_KEY)
   deepseek_key=$(env_value DEEPSEEK_API_KEY)
+  deepseek_url=$(env_value DEEPSEEK_BASE_URL)
+  deepseek_url=${deepseek_url:-https://api.deepseek.com}
   llm_model=$(env_value LLM_MODEL)
   llm_model=${llm_model:-qwen/qwen3.8-27b}
 
@@ -44,7 +46,8 @@ deploy_api() {
   if [ -n "$deepseek_key" ]; then
     store_secret deepseek-api-key "$deepseek_key"
     secrets="$secrets,DEEPSEEK_API_KEY=deepseek-api-key:latest"
-    choices="$choices,deepseek:deepseek-chat"
+    deepseek_choice=$(env_value LLM_CHOICES | tr ',' '\n' | grep '^deepseek:' | head -1)
+    choices="$choices,${deepseek_choice:-deepseek:deepseek-chat}"
   else
     echo "DEEPSEEK_API_KEY is empty in .env: DeepSeek will not be in the model list."
   fi
@@ -59,7 +62,7 @@ deploy_api() {
 
   gcloud run services update "$API_SERVICE" --region "$REGION" --project "$PROJECT" \
     --memory 2Gi --cpu-boost --max-instances 2 \
-    --update-env-vars "^|^LLM_PROVIDER=groq|LLM_MODEL=$llm_model|RATE_LIMIT=10/minute|LLM_CHOICES=$choices" \
+    --update-env-vars "^|^LLM_PROVIDER=groq|LLM_MODEL=$llm_model|RATE_LIMIT=10/minute|LLM_CHOICES=$choices|DEEPSEEK_BASE_URL=$deepseek_url" \
     --update-secrets "$secrets"
 }
 
