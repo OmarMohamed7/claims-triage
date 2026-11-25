@@ -1,20 +1,14 @@
 import os
+import sys
+from pathlib import Path
 
 import httpx
 import streamlit as st
 
-DEFAULT_API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+sys.path.insert(0, str(Path(__file__).parent))
+from samples import SAMPLES
 
-SAMPLES = {
-    "Rear-end collision": (
-        "POL-LIAB-000001",
-        "I was rear-ended at a red light on Main Street on 2026-08-15 while "
-        "driving my sedan. The other driver's insurance admitted fault. Repair "
-        "estimate came to $4,200. No injuries, no other parties involved "
-        "beyond the other driver.",
-    ),
-    "Unreadable submission": ("", "asdf qwer zxcv 123 ???"),
-}
+DEFAULT_API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 STATUS_COLORS = {
     "approved": "green",
@@ -45,15 +39,20 @@ model = st.sidebar.selectbox("Model", [*model_choices, CUSTOM], index=default_in
 custom_llm = None
 if model == CUSTOM:
     custom_provider = st.sidebar.selectbox("Provider", ["gemini", "groq"])
-    custom_model = st.sidebar.text_input("Model name", placeholder="e.g. llama-3.3-70b-versatile")
+    custom_model = st.sidebar.text_input("Model name", placeholder="e.g. qwen/qwen3.8-27b")
     custom_key = st.sidebar.text_input("API key", type="password")
     st.sidebar.caption("Sent to the API for this request only. It is not stored or logged.")
     if custom_model and custom_key:
         custom_llm = {"provider": custom_provider, "model": custom_model, "api_key": custom_key}
     model = None
 
-sample = st.selectbox("Load a sample", ["(none)", *SAMPLES])
-sample_policy, sample_text = SAMPLES.get(sample, ("", ""))
+sample_names = [sample["name"] for sample in SAMPLES]
+sample_name = st.selectbox("Load a sample", ["(none)", *sample_names])
+sample = next((s for s in SAMPLES if s["name"] == sample_name), None)
+sample_policy = sample["policy"] if sample else ""
+sample_text = sample["text"] if sample else ""
+if sample:
+    st.caption(f"Expected: {sample['expect']}")
 
 with st.form("claim"):
     raw_text = st.text_area("Claim description", value=sample_text, height=180)
@@ -100,6 +99,12 @@ if result:
             f"Routed to **{packet['queue'].replace('_', ' ')}** queue. "
             f"Reasons: {', '.join(r.replace('_', ' ') for r in packet['escalation_reasons'])}"
         )
+
+    if st.button("Hide logs" if st.session_state.get("show_logs") else "Show logs"):
+        st.session_state["show_logs"] = not st.session_state.get("show_logs", False)
+        st.rerun()
+    if st.session_state.get("show_logs"):
+        st.code("\n".join(result.get("logs") or ["No logs returned."]), language="text")
 
     claim_tab, fraud_tab, policy_tab, raw_tab = st.tabs(
         ["Extracted claim", "Fraud risk", "Policy", "Raw JSON"]

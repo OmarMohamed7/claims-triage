@@ -72,8 +72,15 @@ class ClaimSubmission(BaseModel):
 
 class CustomLLM(BaseModel):
     provider: Literal["gemini", "groq"]
-    model: str = Field(..., pattern=r"^[A-Za-z0-9._:-]{1,100}$")
+    model: str = Field(..., pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$")
     api_key: SecretStr = Field(..., min_length=1)
+
+    @field_validator("model")
+    @classmethod
+    def no_path_traversal(cls, v: str) -> str:
+        if ".." in v:
+            raise ValueError("invalid model name")
+        return v
 
 
 class ClaimRequest(BaseModel):
@@ -252,3 +259,4 @@ class PipelineState(BaseModel):
     escalation_packet: Optional[EscalationPacket] = None
     human_outcome: Optional[HumanReviewOutcome] = None
     errors: Annotated[list[str], operator.add] = Field(default_factory=list)
+    logs: Annotated[list[str], operator.add] = Field(default_factory=list)

@@ -1,4 +1,5 @@
 import logging
+import time
 from functools import wraps
 from typing import Callable, TypeVar
 
@@ -23,6 +24,10 @@ T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
 
+def _ms(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
+
+
 def _need(value: T | None, name: str) -> T:
     if value is None:
         raise ValueError(f"missing {name}")
@@ -35,14 +40,19 @@ def _node(name: str):
     def wrap(fn: Callable[[PipelineState], dict]) -> Callable[[PipelineState], dict]:
         @wraps(fn)
         def run(state: PipelineState) -> dict:
+            start = time.perf_counter()
             try:
                 with use_llm(state.model, state.custom_llm):
-                    return fn(state)
+                    result = fn(state)
+                return {**result, "logs": [f"{name}: ok ({_ms(start)} ms)"]}
             except Exception as e:
                 logger.exception(
                     "%s failed for submission %s", name, state.submission.submission_id
                 )
-                return {"errors": [f"{name}: {e}"]}
+                return {
+                    "errors": [f"{name}: {e}"],
+                    "logs": [f"{name}: failed after {_ms(start)} ms: {e}"],
+                }
 
         return run
 

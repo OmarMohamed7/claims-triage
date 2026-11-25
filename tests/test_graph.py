@@ -153,3 +153,23 @@ def test_missing_input_is_recorded_not_raised(patched, caplog):
         EscalationReason.PROCESSING_ERROR
     ]
     assert "adjudication failed for submission s1" in caplog.text
+
+
+def test_logs_record_each_step_in_order(patched):
+    logs = _run()["logs"]
+    names = [line.split(":")[0] for line in logs]
+    assert names[0] == "intake"
+    assert set(names[1:3]) == {"fraud_risk", "policy_retrieval"}
+    assert names[3] == "adjudication"
+    assert all("ok (" in line for line in logs)
+
+
+def test_logs_record_failure_with_message(patched):
+    def boom(s):
+        raise RuntimeError("bad json")
+
+    patched.setattr(graph, "extract_claim", boom)
+    logs = _run()["logs"]
+    assert logs[0].startswith("intake: failed after")
+    assert "bad json" in logs[0]
+    assert any(line.startswith("early_escalation: ok") for line in logs)

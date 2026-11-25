@@ -38,3 +38,14 @@ def test_custom_rejects_unknown_provider_and_bad_model_name():
         CustomLLM(provider="groq", model="../../etc", api_key="k")
     with pytest.raises(ValueError):
         CustomLLM(provider="groq", model="m", api_key="")
+
+
+def test_custom_allows_slash_models_but_not_traversal():
+    assert _custom("groq", "openai/gpt-oss-120b").model == "openai/gpt-oss-120b"
+    with pytest.raises(ValueError):
+        CustomLLM(provider="gemini", model="a/../b", api_key="k")
+
+
+def test_gemini_model_is_url_quoted():
+    provider = llm.GeminiProvider(model="a/b", api_key="k")
+    assert "a%2Fb:generateContent" in provider._url

@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
+from urllib.parse import quote
 
 import httpx
 
@@ -75,7 +76,7 @@ class GeminiProvider(LLMProvider):
         if not api_key:
             raise ValueError("GEMINI_API_KEY is not set")
         self._url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+            f"https://generativelanguage.googleapis.com/v1beta/models/{quote(model, safe='')}:generateContent"
         )
         self._api_key = api_key
 
