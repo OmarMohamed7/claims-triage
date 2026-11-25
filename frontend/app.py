@@ -39,34 +39,59 @@ if page == "Adjudicator queue":
         response = httpx.get(f"{api_url}/reviews", timeout=10)
         response.raise_for_status()
         pending = response.json()
+        response = httpx.get(f"{api_url}/reviews/history", timeout=10)
+        response.raise_for_status()
+        history = response.json()
     except Exception as e:
         st.error(f"Could not load queue: {e}")
         st.stop()
     if st.button("Refresh"):
         st.rerun()
-    if not pending:
-        st.info("No claims waiting for review.")
-    for item in pending:
-        claim = item.get("extracted_claim") or {}
-        amount = claim.get("claimed_amount")
-        label = f"{item['queue'].replace('_', ' ').title()} · {item['submission_id'][:8]}"
-        with st.expander(f"{label} · ${amount:,.2f}" if amount else label):
-            st.write(item["planner_reasoning"])
-            st.caption("Reasons: " + ", ".join(r.replace("_", " ") for r in item["escalation_reasons"]))
-            if claim:
-                st.json(claim)
-            key = item["submission_id"]
-            notes = st.text_area("Notes", key=f"notes_{key}")
-            approved_amount = st.number_input("Approved amount", min_value=0.0, value=float(amount or 0), key=f"amount_{key}")
-            approve_col, deny_col = st.columns(2)
-            for column, label_text, approve in ((approve_col, "Approve", True), (deny_col, "Deny", False)):
-                if column.button(label_text, key=f"{label_text}_{key}", type="primary" if approve else "secondary"):
-                    httpx.post(
-                        f"{api_url}/reviews/{key}/decision",
-                        json={"approve": approve, "approved_amount": approved_amount, "notes": notes},
-                        timeout=10,
-                    ).raise_for_status()
-                    st.rerun()
+    pending_tab, history_tab = st.tabs([f"Pending ({len(pending)})", f"History ({len(history)})"])
+
+    with pending_tab:
+        if not pending:
+            st.info("No claims waiting for review.")
+        for item in pending:
+            claim = item.get("extracted_claim") or {}
+            amount = claim.get("claimed_amount")
+            label = f"{item['queue'].replace('_', ' ').title()} · {item['submission_id'][:8]}"
+            with st.expander(f"{label} · ${amount:,.2f}" if amount else label):
+                st.write(item["planner_reasoning"])
+                st.caption("Reasons: " + ", ".join(r.replace("_", " ") for r in item["escalation_reasons"]))
+                if claim:
+                    st.json(claim)
+                key = item["submission_id"]
+                notes = st.text_area("Notes", key=f"notes_{key}")
+                approved_amount = st.number_input("Approved amount", min_value=0.0, value=float(amount or 0), key=f"amount_{key}")
+                approve_col, deny_col = st.columns(2)
+                for column, label_text, approve in ((approve_col, "Approve", True), (deny_col, "Deny", False)):
+                    if column.button(label_text, key=f"{label_text}_{key}", type="primary" if approve else "secondary"):
+                        httpx.post(
+                            f"{api_url}/reviews/{key}/decision",
+                            json={"approve": approve, "approved_amount": approved_amount, "notes": notes},
+                            timeout=10,
+                        ).raise_for_status()
+                        st.rerun()
+
+    with history_tab:
+        if not history:
+            st.info("No decisions yet.")
+        for entry in history:
+            packet, outcome = entry["packet"], entry["outcome"]
+            claim = packet.get("extracted_claim") or {}
+            color = STATUS_COLORS.get(outcome["final_status"], "gray")
+            title = f"{packet['submission_id'][:8]} · :{color}[{outcome['final_status'].title()}]"
+            with st.expander(title):
+                st.caption(f"Reviewed {outcome['reviewed_at'][:19].replace('T', ' ')} UTC by {outcome['reviewer_id']}")
+                if outcome.get("approved_amount") is not None:
+                    st.metric("Approved amount", f"${outcome['approved_amount']:,.2f}")
+                if outcome["reviewer_notes"]:
+                    st.write(f"**Notes:** {outcome['reviewer_notes']}")
+                st.write(f"**Escalated because:** {packet['planner_reasoning']}")
+                st.caption("Reasons: " + ", ".join(r.replace("_", " ") for r in packet["escalation_reasons"]))
+                if claim:
+                    st.json(claim)
     st.stop()
 
 try:

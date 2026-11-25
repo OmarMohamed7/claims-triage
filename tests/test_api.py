@@ -128,3 +128,17 @@ def test_decision_on_unknown_or_decided_review_is_404(review_client):
     submission_id = review_client.get("/reviews").json()[0]["submission_id"]
     assert review_client.post(f"/reviews/{submission_id}/decision", json={"approve": False}).status_code == 200
     assert review_client.post(f"/reviews/{submission_id}/decision", json={"approve": True}).status_code == 404
+
+
+def test_history_lists_decided_reviews(review_client):
+    review_client.post("/claims", json={"raw_text": "x"})
+    submission_id = review_client.get("/reviews").json()[0]["submission_id"]
+    assert review_client.get("/reviews/history").json() == []
+    review_client.post(
+        f"/reviews/{submission_id}/decision", json={"approve": False, "notes": "no"}
+    )
+    history = review_client.get("/reviews/history").json()
+    assert len(history) == 1
+    assert history[0]["outcome"]["final_status"] == "denied"
+    assert history[0]["outcome"]["reviewer_notes"] == "no"
+    assert history[0]["packet"]["submission_id"] == submission_id

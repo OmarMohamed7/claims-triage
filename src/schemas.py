@@ -241,6 +241,11 @@ class HumanReviewOutcome(BaseModel):
     reviewed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class ReviewHistoryItem(BaseModel):
+    packet: EscalationPacket
+    outcome: HumanReviewOutcome
+
+
 class ReviewDecisionRequest(BaseModel):
     reviewer_id: str = Field(default="adjudicator", max_length=64)
     approve: bool

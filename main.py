@@ -25,6 +25,7 @@ from src.schemas import (
     HumanReviewOutcome,
     PipelineState,
     ReviewDecisionRequest,
+    ReviewHistoryItem,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -136,6 +137,11 @@ def submit_claim(request: Request, body: ClaimRequest):
 @app.get("/reviews", response_model=list[EscalationPacket])
 def list_reviews(request: Request, pending: bool = True):
     return request.app.state.reviews.list(pending_only=pending)
+
+
+@app.get("/reviews/history", response_model=list[ReviewHistoryItem])
+def review_history(request: Request):
+    return request.app.state.reviews.history()
 
 
 @app.post("/reviews/{submission_id}/decision", response_model=HumanReviewOutcome)

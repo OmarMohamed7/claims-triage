@@ -4,7 +4,7 @@ from pathlib import Path
 
 import psycopg
 
-from src.schemas import DecisionStatus, EscalationPacket, HumanReviewOutcome
+from src.schemas import DecisionStatus, EscalationPacket, HumanReviewOutcome, ReviewHistoryItem
 
 OPEN = "('pending_human_review', 'escalated')"
 
@@ -43,6 +43,17 @@ class ReviewStore:
             "ON CONFLICT (submission_id) DO UPDATE SET packet = excluded.packet, status = excluded.status",
             (packet.submission_id, packet.model_dump_json(), packet.status.value),
         )
+
+    def history(self) -> list[ReviewHistoryItem]:
+        rows = self._run("SELECT packet, outcome FROM reviews WHERE outcome IS NOT NULL ORDER BY created_at DESC")
+        items = [
+            ReviewHistoryItem(
+                packet=EscalationPacket.model_validate_json(packet),
+                outcome=HumanReviewOutcome.model_validate_json(outcome),
+            )
+            for packet, outcome in rows
+        ]
+        return sorted(items, key=lambda item: item.outcome.reviewed_at, reverse=True)
 
     def list(self, pending_only: bool = True) -> list[EscalationPacket]:
         where = f" WHERE status IN {OPEN}" if pending_only else ""
