@@ -2,7 +2,7 @@
 LLM provider interface.
 
 Agents call get_llm().generate(prompt) and never import a provider SDK
-directly. Swapping providers (Ollama, Gemini, Groq) is a
+directly. Swapping providers (Ollama, Gemini, Vertex, Groq) is a
 one-line change in .env (LLM_PROVIDER / LLM_MODEL), not a code change
 across every agent.
 
@@ -55,6 +55,18 @@ class OllamaProvider(LLMProvider):
         return response["response"]
 
 
+def _gemini_text(response: httpx.Response) -> str:
+    parts = response.json()["candidates"][0]["content"]["parts"]
+    return "".join(part.get("text", "") for part in parts if not part.get("thought"))
+
+
+def _gemini_payload(prompt: str, temperature: float) -> dict:
+    return {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": temperature},
+    }
+
+
 class GeminiProvider(LLMProvider):
     def __init__(self, model: str, api_key: str):
         if not api_key:
@@ -68,13 +80,45 @@ class GeminiProvider(LLMProvider):
         response = _post_with_retry(
             self._url,
             {"x-goog-api-key": self._api_key},
-            {
-                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": temperature},
-            },
+            _gemini_payload(prompt, temperature),
         )
-        parts = response.json()["candidates"][0]["content"]["parts"]
-        return "".join(part.get("text", "") for part in parts if not part.get("thought"))
+        return _gemini_text(response)
+
+
+class VertexGeminiProvider(LLMProvider):
+    def __init__(self, model: str, project: str, location: str):
+        import google.auth
+
+        self._credentials, default_project = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        project = project or default_project
+        if not project:
+            raise ValueError("GCP_PROJECT is not set and no default project was found")
+        host = (
+            "aiplatform.googleapis.com"
+            if location == "global"
+            else f"{location}-aiplatform.googleapis.com"
+        )
+        self._url = (
+            f"https://{host}/v1/projects/{project}/locations/{location}"
+            f"/publishers/google/models/{model}:generateContent"
+        )
+
+    def _token(self) -> str:
+        from google.auth.transport.requests import Request
+
+        if not self._credentials.valid:
+            self._credentials.refresh(Request())
+        return self._credentials.token
+
+    def generate(self, prompt: str, *, temperature: float = 0.0) -> str:
+        response = _post_with_retry(
+            self._url,
+            {"Authorization": f"Bearer {self._token()}"},
+            _gemini_payload(prompt, temperature),
+        )
+        return _gemini_text(response)
 
 
 class GroqProvider(LLMProvider):
@@ -105,6 +149,11 @@ _PROVIDER_FACTORIES = {
     "gemini": lambda: GeminiProvider(
         model=config.models.llm_model,
         api_key=config.models.gemini_api_key,
+    ),
+    "vertex": lambda: VertexGeminiProvider(
+        model=config.models.llm_model,
+        project=config.models.gcp_project,
+        location=config.models.gcp_location,
     ),
     "groq": lambda: GroqProvider(
         model=config.models.llm_model,
