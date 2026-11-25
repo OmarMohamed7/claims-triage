@@ -11,6 +11,7 @@ from src.agents.human_escalation import build_escalation_packet
 from src.agents.intake import extract_claim
 from src.agents.policy_retrieval import retrieve_policy
 from src.config import config
+from src.llm import use_llm
 from src.schemas import (
     AdjudicationDecision,
     DecisionStatus,
@@ -35,7 +36,8 @@ def _node(name: str):
         @wraps(fn)
         def run(state: PipelineState) -> dict:
             try:
-                return fn(state)
+                with use_llm(state.model, state.custom_llm):
+                    return fn(state)
             except Exception as e:
                 logger.exception(
                     "%s failed for submission %s", name, state.submission.submission_id

@@ -33,6 +33,25 @@ if st.sidebar.button("Check API"):
     except Exception as e:
         st.sidebar.error(f"Unreachable: {e}")
 
+try:
+    model_info = httpx.get(f"{api_url}/models", timeout=10).json()
+    model_choices = model_info["choices"]
+    default_index = model_choices.index(model_info["default"])
+except Exception:
+    model_choices, default_index = [], 0
+
+CUSTOM = "Custom (use my own API key)"
+model = st.sidebar.selectbox("Model", [*model_choices, CUSTOM], index=default_index)
+custom_llm = None
+if model == CUSTOM:
+    custom_provider = st.sidebar.selectbox("Provider", ["gemini", "groq"])
+    custom_model = st.sidebar.text_input("Model name", placeholder="e.g. llama-3.3-70b-versatile")
+    custom_key = st.sidebar.text_input("API key", type="password")
+    st.sidebar.caption("Sent to the API for this request only. It is not stored or logged.")
+    if custom_model and custom_key:
+        custom_llm = {"provider": custom_provider, "model": custom_model, "api_key": custom_key}
+    model = None
+
 sample = st.selectbox("Load a sample", ["(none)", *SAMPLES])
 sample_policy, sample_text = SAMPLES.get(sample, ("", ""))
 
@@ -45,11 +64,14 @@ if submitted:
     if not raw_text.strip():
         st.warning("Enter a claim description.")
         st.stop()
+    if model is None and custom_llm is None:
+        st.warning("Enter a model name and API key for the custom option, or pick a listed model.")
+        st.stop()
     try:
         with st.spinner("Running pipeline..."):
             response = httpx.post(
                 f"{api_url}/claims",
-                json={"raw_text": raw_text, "policy_number": policy_number or None},
+                json={"raw_text": raw_text, "policy_number": policy_number or None, "model": model, "custom_llm": custom_llm},
                 timeout=300,
             )
             response.raise_for_status()

@@ -14,11 +14,14 @@ from __future__ import annotations
 
 import time
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 
 import httpx
 
 from src.config import config
+from src.schemas import CustomLLM
 
 
 def _post_with_retry(url: str, headers: dict, payload: dict, attempts: int = 3) -> httpx.Response:
@@ -142,37 +145,65 @@ class GroqProvider(LLMProvider):
 
 
 _PROVIDER_FACTORIES = {
-    "ollama": lambda: OllamaProvider(
-        model=config.models.llm_model,
-        base_url=config.models.ollama_base_url,
+    "ollama": lambda model: OllamaProvider(
+        model=model, base_url=config.models.ollama_base_url
     ),
-    "gemini": lambda: GeminiProvider(
-        model=config.models.llm_model,
-        api_key=config.models.gemini_api_key,
+    "gemini": lambda model: GeminiProvider(
+        model=model, api_key=config.models.gemini_api_key
     ),
-    "vertex": lambda: VertexGeminiProvider(
-        model=config.models.llm_model,
+    "vertex": lambda model: VertexGeminiProvider(
+        model=model,
         project=config.models.gcp_project,
         location=config.models.gcp_location,
     ),
-    "groq": lambda: GroqProvider(
-        model=config.models.llm_model,
-        api_key=config.models.groq_api_key,
+    "groq": lambda model: GroqProvider(
+        model=model, api_key=config.models.groq_api_key
     ),
 }
 
+_selected: ContextVar[str | LLMProvider | None] = ContextVar("llm_choice", default=None)
+
+
+def _custom_provider(custom: CustomLLM) -> LLMProvider:
+    key = custom.api_key.get_secret_value()
+    if custom.provider == "gemini":
+        return GeminiProvider(model=custom.model, api_key=key)
+    return GroqProvider(model=custom.model, api_key=key)
+
+
+@contextmanager
+def use_llm(choice: str | None, custom: CustomLLM | None = None):
+    token = _selected.set(_custom_provider(custom) if custom else choice)
+    try:
+        yield
+    finally:
+        _selected.reset(token)
+
 
 @lru_cache(maxsize=None)
-def get_llm() -> LLMProvider:
-    """Return the configured LLMProvider (LLM_PROVIDER in .env), cached."""
-    provider_name = config.models.llm_provider
+def _build(provider_name: str, model: str) -> LLMProvider:
     try:
         factory = _PROVIDER_FACTORIES[provider_name]
     except KeyError:
         raise ValueError(
-            f"Unknown LLM_PROVIDER {provider_name!r}. "
+            f"Unknown LLM provider {provider_name!r}. "
             f"Available: {sorted(_PROVIDER_FACTORIES)}. "
             "Add a new LLMProvider subclass and factory entry in src/llm.py "
             "to support it."
         ) from None
-    return factory()
+    return factory(model)
+
+
+def get_llm(choice: str | None = None) -> LLMProvider:
+    """Return the LLMProvider for choice ("provider:model"), else the one
+    selected by use_llm(), else the LLM_PROVIDER / LLM_MODEL default."""
+    selected = _selected.get()
+    if choice is None and isinstance(selected, LLMProvider):
+        return selected
+    choice = choice or selected or config.models.default_llm
+    if choice not in config.models.llm_choices:
+        raise ValueError(
+            f"Model {choice!r} is not allowed. Allowed: {config.models.llm_choices}"
+        )
+    provider_name, _, model = choice.partition(":")
+    return _build(provider_name, model)

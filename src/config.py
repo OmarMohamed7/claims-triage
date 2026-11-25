@@ -57,6 +57,15 @@ class ModelConfig:
         "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
     )
 
+    @property
+    def default_llm(self) -> str:
+        return f"{self.llm_provider}:{self.llm_model}"
+
+    @property
+    def llm_choices(self) -> list[str]:
+        extra = [c.strip() for c in os.getenv("LLM_CHOICES", "").split(",") if c.strip()]
+        return list(dict.fromkeys([self.default_llm, *extra]))
+
 
 @dataclass
 class PathConfig:

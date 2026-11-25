@@ -47,3 +47,43 @@ def test_missing_artifacts_fail_startup(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError, match="fraud model"):
         with TestClient(main.app):
             pass
+
+
+def test_models_endpoint_lists_default(client):
+    body = client.get("/models").json()
+    assert body["default"] in body["choices"]
+
+
+def test_disallowed_model_is_rejected(client):
+    response = client.post("/claims", json={"raw_text": "x", "model": "groq:nope"})
+    assert response.status_code == 400
+
+
+def test_custom_llm_is_used_and_key_is_not_echoed(client, monkeypatch):
+    from src import llm
+
+    seen = {}
+
+    def extract(submission):
+        provider = llm.get_llm()
+        seen["type"] = type(provider).__name__
+        seen["key"] = provider._api_key
+        return _claim()
+
+    monkeypatch.setattr(graph, "extract_claim", extract)
+    response = client.post(
+        "/claims",
+        json={
+            "raw_text": "x",
+            "custom_llm": {"provider": "groq", "model": "llama-x", "api_key": "sk-test-123"},
+        },
+    )
+    assert response.status_code == 200
+    assert seen == {"type": "GroqProvider", "key": "sk-test-123"}
+    assert "sk-test-123" not in response.text
+    assert "custom_llm" not in response.json()
+
+
+def test_custom_llm_validation(client):
+    bad = {"provider": "evil", "model": "m", "api_key": "k"}
+    assert client.post("/claims", json={"raw_text": "x", "custom_llm": bad}).status_code == 422

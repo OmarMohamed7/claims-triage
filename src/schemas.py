@@ -12,9 +12,9 @@ from __future__ import annotations
 import operator
 from datetime import date, datetime, timezone
 from enum import Enum
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, SecretStr, field_validator
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -70,9 +70,17 @@ class ClaimSubmission(BaseModel):
     attachment_paths: list[str] = Field(default_factory=list)
 
 
+class CustomLLM(BaseModel):
+    provider: Literal["gemini", "groq"]
+    model: str = Field(..., pattern=r"^[A-Za-z0-9._:-]{1,100}$")
+    api_key: SecretStr = Field(..., min_length=1)
+
+
 class ClaimRequest(BaseModel):
     raw_text: str
     policy_number: Optional[str] = None
+    model: Optional[str] = None
+    custom_llm: Optional[CustomLLM] = None
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +243,8 @@ class PipelineState(BaseModel):
     """The shared state object passed between LangGraph nodes."""
 
     submission: ClaimSubmission
+    model: Optional[str] = None
+    custom_llm: Optional[CustomLLM] = Field(default=None, exclude=True, repr=False)
     extracted_claim: Optional[ExtractedClaim] = None
     policy_result: Optional[PolicyRetrievalResult] = None
     fraud_result: Optional[FraudRiskResult] = None

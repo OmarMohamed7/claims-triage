@@ -8,7 +8,7 @@ from typing import Awaitable, Callable
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi_swagger_ui_theme import setup_swagger_ui_theme
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -90,15 +90,33 @@ def health():
     return {"status": "ok", "version": config.VERSION}
 
 
+@app.get("/models")
+def models():
+    return {
+        "default": config.models.default_llm,
+        "choices": config.models.llm_choices,
+    }
+
+
 @app.post("/claims", response_model=PipelineState)
 @limiter.limit(config.api.rate_limit)
 def submit_claim(request: Request, body: ClaimRequest):
+    if (
+        body.custom_llm is None
+        and body.model is not None
+        and body.model not in config.models.llm_choices
+    ):
+        raise HTTPException(status_code=400, detail=f"Model not allowed: {body.model}")
     submission = ClaimSubmission(
         submission_id=uuid4().hex,
         raw_text=body.raw_text,
         policy_number=body.policy_number,
     )
-    result = request.app.state.pipeline.invoke(PipelineState(submission=submission))
+    result = request.app.state.pipeline.invoke(
+        PipelineState(
+            submission=submission, model=body.model, custom_llm=body.custom_llm
+        )
+    )
     return PipelineState(**result)
 
 
