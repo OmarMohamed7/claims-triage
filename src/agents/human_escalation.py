@@ -1,3 +1,10 @@
+# HUMAN ESCALATION AGENT  (Step 4 of 5, only for escalated claims)
+# Uses an LLM: no.
+# What it does: bundles everything a human reviewer needs into one packet: the claim,
+#   fraud score, policy findings, the decision and why it was escalated.
+# Output: EscalationPacket, which the API saves to the adjudicator queue.
+# Claims that are approved or denied never reach this step.
+
 from typing import Optional
 
 from src.schemas import (

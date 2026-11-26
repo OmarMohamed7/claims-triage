@@ -1,6 +1,12 @@
-# Adjudication Agent (Manager/Planner) — combines Intake, Policy Retrieval,
-# and Fraud Risk outputs into a final AdjudicationDecision.
-# See PLAN.md, Phase 5.
+# ADJUDICATION AGENT  (Step 3 of 5)
+# Uses an LLM: only as a fallback.
+# What it does: makes the final decision (approved, denied or escalated) from the
+#   extracted claim, the policy result and the fraud result.
+# How: apply_rule() runs first with fixed thresholds from config. It handles the clear
+#   cases: high fraud or a high-value claim escalates, a clean covered claim is approved.
+#   If the rules cannot decide, adjudicate_with_llm() decides, with validated output and retries.
+# Output: AdjudicationDecision with plain-language reasoning.
+# Next: escalated or pending claims go to the Human Escalation agent.
 
 from pydantic import ValidationError
 

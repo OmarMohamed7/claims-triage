@@ -1,10 +1,11 @@
-# Policy Retrieval Agent — hybrid (Qdrant + BM25) search over data/policy_docs
-# to determine coverage for an ExtractedClaim.
-#
-# Reads the index artifacts built by scripts/build_policy_index.py.
-# See PLAN.md, Phase 3.
-#
-\
+# POLICY RETRIEVAL AGENT  (Step 2 of 5, runs in parallel with Fraud Risk)
+# Uses an LLM: no. It is search plus pattern matching (RAG without the generation step).
+# What it does: finds the policy clauses that apply to this claim and works out whether
+#   it is covered, plus the coverage limit and deductible.
+# How: meaning-based search (Qdrant) and keyword search (BM25) are merged, weak matches
+#   are dropped, and dollar amounts are read from the best clauses with regex.
+# Needs: the index built by scripts/build_policy_index.py.
+# Output: PolicyRetrievalResult with a retrieval confidence. Low confidence means "unsure".
 
 import json
 from pathlib import Path

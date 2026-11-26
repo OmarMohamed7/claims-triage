@@ -1,12 +1,9 @@
-# Fraud Risk Agent — classical ML (not an LLM call). Scores fraud risk for a
-# claim using the classifier trained by scripts/train_fraud_model.py.
-# See PLAN.md, Phase 4.
-#
-# TODO: load_model()
-# - joblib.load(config.models.fraud_model_path); cache it so repeated
-#   calls don't hit disk. Raise a clear error if the file is missing (i.e.
-#   scripts/train_fraud_model.py hasn't been run yet).
-#
+# FRAUD RISK AGENT  (Step 2 of 5, runs in parallel with Policy Retrieval)
+# Uses an LLM: no. It is a classic XGBoost model trained by scripts/train_fraud_model.py.
+# What it does: gives the claim a fraud risk score from 0 to 1 and a tier (low / medium / high).
+# How: looks up the policyholder's history, builds features, and runs the saved model.
+# Output: FraudRiskResult. Unknown policy numbers are treated as new customers.
+# Next: Adjudication uses the tier: high escalates, only low can be auto-approved.
 
 from pathlib import Path
 from typing import Any, Dict, Optional

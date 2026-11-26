@@ -1,16 +1,12 @@
-# Intake Agent — turns a raw ClaimSubmission into a structured ExtractedClaim.
-# See PLAN.md, Phase 2.
-#
-# TODO:
-# - Build a prompt instructing the LLM (config.models.llm_provider /
-#   llm_model) to pull out every ExtractedClaim field from raw_text.
-# - Ask the model to self-report `extraction_confidence` (0-1) and list any
-#   fields it could not confidently fill in `missing_fields`.
-# - Parse the model's response into ExtractedClaim; on a ValidationError,
-#   retry with the error fed back into the prompt (cap retries, e.g. 2).
-# - If extraction still fails after retries, decide how the caller finds out
-#   (raise, or return a low-confidence ExtractedClaim with missing_fields
-#   populated) — document the choice here once decided.
+# INTAKE AGENT  (Step 1 of 5)
+# Uses an LLM: yes.
+# What it does: reads the customer's free-text claim and fills a structured form
+#   (claim type, date, amount, location, parties involved, ...).
+# How: sends a prompt to the LLM, validates the JSON answer against ExtractedClaim,
+#   and retries with the error message if the answer is invalid.
+# Output: ExtractedClaim, including extraction_confidence and missing_fields.
+# Next: if confidence is too low, the claim goes straight to a human;
+#   otherwise Fraud Risk and Policy Retrieval run in parallel.
 
 import json
 

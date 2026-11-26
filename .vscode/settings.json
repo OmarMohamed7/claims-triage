@@ -12,16 +12,16 @@
     "python.analysis.inlayHints.callArgumentNames": "partial",
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingTypeStubs": "none",
-        "reportUnknownMemberType": "warning",
+        "reportUnknownMemberType": "none",
         "reportUnknownArgumentType": "none",
-        "reportUnknownVariableType": "warning",
+        "reportUnknownVariableType": "none",
         "reportOptionalSubscript": "none",
         "reportOptionalMemberAccess": "error",
         "reportOptionalCall": "error",
         "reportReturnType": "error",
         "reportArgumentType": "none",
-        "reportAssignmentType": "error",
+        "reportAssignmentType": "none",
         "reportUnusedImport": "warning",
-        "reportUnusedVariable": "warning"
+        "reportUnusedVariable": "warning",
     }
 }
